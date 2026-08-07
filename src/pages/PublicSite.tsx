@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
+import { HeroCarousel } from '@/components/HeroCarousel';
+import { ReviewSystem } from '@/components/ReviewSystem';
 import {
   Building2, Mail, Lock, User, Eye, EyeOff, AlertCircle, Phone, Stethoscope,
   HeartPulse, Ambulance, Pill, FlaskConical, Scissors, CalendarClock,
   ShieldCheck, Clock, Award, Users, Activity, BedDouble, ArrowLeft, ArrowRight,
   Brain, Bone, Baby, Eye as EyeIcon, Syringe, Heart, Menu, X, MapPin,
   Microscope, Thermometer, ChevronRight, Package, FlaskRound, Beaker,
-  Send, CheckCircle, MessageSquare, Navigation, Globe, Star,
+  Send, CheckCircle, MessageSquare, Navigation, Globe, Star, Sparkles,
+  TrendingUp, HeartHandshake, Zap, Plus, Quote,
 } from 'lucide-react';
 
-type View = 'home' | 'login' | 'signup' | 'service-detail' | 'department-detail';
+type View = 'home' | 'login' | 'signup' | 'service-detail' | 'department-detail' | 'reviews';
 
 interface ServiceDetail {
   id: string;
@@ -134,6 +137,7 @@ export function PublicSite({ onBackToDashboard }: { onBackToDashboard?: () => vo
   if (view === 'signup') return <AuthPage mode="signup" setView={setView} signIn={signIn} signUp={signUp} />;
   if (view === 'service-detail' && selectedService) return <ServiceDetailPage service={selectedService} setView={setView} />;
   if (view === 'department-detail' && selectedDept) return <DepartmentDetailPage dept={selectedDept} setView={setView} />;
+  if (view === 'reviews') return <ReviewsPage setView={setView} onBackToDashboard={onBackToDashboard} />;
   return <HomePage setView={handleSetView} onSelectService={(s) => { setSelectedService(s); setView('service-detail'); }} onSelectDept={(d) => { setSelectedDept(d); setView('department-detail'); }} onBackToDashboard={onBackToDashboard} />;
 }
 
@@ -156,12 +160,18 @@ function NavBar({ setView, onNavClick, onBackToDashboard }: { setView: (v: View)
     { id: 'services', label: 'Services' },
     { id: 'departments', label: 'Departments' },
     { id: 'gallery', label: 'Gallery' },
+    { id: 'reviews', label: 'Reviews' },
     { id: 'about', label: 'About' },
     { id: 'inquiry', label: 'Inquiry' },
     { id: 'contact', label: 'Contact' },
   ];
 
   function handleNavClick(id: string) {
+    if (id === 'reviews') {
+      setView('reviews');
+      setMobileOpen(false);
+      return;
+    }
     if (onNavClick) {
       onNavClick(id);
     } else {
@@ -241,58 +251,41 @@ function HomePage({ setView, onSelectService, onSelectDept, onBackToDashboard }:
   }, []);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       <NavBar setView={setView} onBackToDashboard={onBackToDashboard} />
 
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-brand-50/40 to-white">
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-20 right-10 w-72 h-72 bg-brand-100/40 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-10 left-10 w-96 h-96 bg-emerald-100/30 rounded-full blur-3xl"></div>
-        </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="animate-fade-in">
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-brand-50 text-brand-700 rounded-full text-xs font-semibold mb-6 border border-brand-100">
-                <ShieldCheck size={14} /> 100-Bed Multi-Specialty Nursing Home
-              </span>
-              <h1 className="text-4xl lg:text-5xl font-bold text-slate-800 leading-tight mb-6">
-                Compassionate Care,<br />
-                <span className="text-brand-600">Advanced Medicine</span>
-              </h1>
-              <p className="text-lg text-slate-500 mb-8 leading-relaxed">
-                Providing quality healthcare with a personal touch. From emergency services to specialized treatments, we're here for you and your family 24/7.
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <button onClick={() => setView('signup')} className="btn-primary"><CalendarClock size={18} /> Book Appointment</button>
-                <button onClick={() => setView('login')} className="btn-secondary">Patient Login</button>
-              </div>
-              <div className="flex items-center gap-8 mt-10 pt-8 border-t border-slate-100">
-                <div><p className="text-3xl font-bold text-slate-800">100+</p><p className="text-xs text-slate-400">Beds</p></div>
-                <div><p className="text-3xl font-bold text-slate-800">15+</p><p className="text-xs text-slate-400">Specialties</p></div>
-                <div><p className="text-3xl font-bold text-slate-800">24/7</p><p className="text-xs text-slate-400">Emergency</p></div>
-              </div>
-            </div>
-            <div className="relative">
-              <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl shadow-brand-600/10">
-                <img src="https://images.pexels.com/photos/263402/pexels-photo-263402.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="Hospital" className="w-full h-full object-cover" />
-              </div>
-              <div className="absolute -bottom-5 -left-5 bg-white rounded-2xl shadow-xl p-5 flex items-center gap-4">
-                <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
-                  <Activity className="text-emerald-600" size={24} />
+      {/* Hero Carousel */}
+      <HeroCarousel onBookAppointment={() => setView('signup')} onLogin={() => setView('login')} />
+
+      {/* Quick Stats Banner */}
+      <section className="relative -mt-1 bg-gradient-to-r from-brand-600 via-cyan-600 to-blue-600 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-white">
+            {[
+              { icon: BedDouble, value: '100+', label: 'Beds' },
+              { icon: Stethoscope, value: '15+', label: 'Specialties' },
+              { icon: Ambulance, value: '24/7', label: 'Emergency' },
+              { icon: Users, value: '10K+', label: 'Patients Served' },
+            ].map((stat, i) => {
+              const Icon = stat.icon;
+              return (
+                <div key={i} className={`flex items-center gap-3 animate-fade-in-up stagger-${i + 1}`}>
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                    <Icon size={24} />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-extrabold">{stat.value}</p>
+                    <p className="text-xs text-cyan-100">{stat.label}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-800">Trusted by 10,000+</p>
-                  <p className="text-xs text-slate-400">Patients since 2010</p>
-                </div>
-              </div>
-            </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
       {/* Services */}
-      <section id="services" className="py-20 bg-white">
+      <section id="services" className="py-20 bg-gradient-to-b from-slate-50 via-blue-50/30 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <span className="text-brand-600 font-semibold text-sm uppercase tracking-wide">What We Offer</span>
@@ -320,7 +313,7 @@ function HomePage({ setView, onSelectService, onSelectDept, onBackToDashboard }:
       </section>
 
       {/* Departments */}
-      <section id="departments" className="py-20 bg-slate-50">
+      <section id="departments" className="py-20 bg-gradient-to-br from-cyan-50 via-teal-50/40 to-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <span className="text-brand-600 font-semibold text-sm uppercase tracking-wide">Specialized Care</span>
@@ -353,7 +346,7 @@ function HomePage({ setView, onSelectService, onSelectDept, onBackToDashboard }:
       </section>
 
       {/* Gallery */}
-      <section id="gallery" className="py-20 bg-white">
+      <section id="gallery" className="py-20 bg-gradient-to-b from-white via-amber-50/30 to-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <span className="text-brand-600 font-semibold text-sm uppercase tracking-wide">Our Facility</span>
@@ -373,8 +366,20 @@ function HomePage({ setView, onSelectService, onSelectDept, onBackToDashboard }:
         </div>
       </section>
 
+      {/* Reviews */}
+      <section id="reviews" className="py-20 bg-gradient-to-br from-brand-50 via-cyan-50/50 to-blue-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <span className="text-brand-600 font-semibold text-sm uppercase tracking-wide flex items-center justify-center gap-2"><Sparkles size={16} /> Patient Feedback</span>
+            <h2 className="text-3xl font-bold text-slate-800 mt-2 mb-3">Live Reviews</h2>
+            <p className="text-slate-500">Real-time reviews from our patients. Share your own experience below.</p>
+          </div>
+          <ReviewSystem />
+        </div>
+      </section>
+
       {/* About */}
-      <section id="about" className="py-20 bg-slate-50">
+      <section id="about" className="py-20 bg-gradient-to-br from-slate-50 via-emerald-50/30 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -414,7 +419,7 @@ function HomePage({ setView, onSelectService, onSelectDept, onBackToDashboard }:
       </section>
 
       {/* Inquiry & Map */}
-      <section id="inquiry" className="py-20 bg-white">
+      <section id="inquiry" className="py-20 bg-gradient-to-b from-white via-rose-50/30 to-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <span className="text-brand-600 font-semibold text-sm uppercase tracking-wide">Have a Question?</span>
@@ -466,7 +471,7 @@ function HomePage({ setView, onSelectService, onSelectDept, onBackToDashboard }:
       </section>
 
       {/* Contact */}
-      <section id="contact" className="py-20 bg-slate-50">
+      <section id="contact" className="py-20 bg-gradient-to-br from-slate-800 via-slate-900 to-brand-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <span className="text-brand-600 font-semibold text-sm uppercase tracking-wide">Get in Touch</span>
@@ -481,19 +486,19 @@ function HomePage({ setView, onSelectService, onSelectDept, onBackToDashboard }:
             ].map((c) => {
               const Icon = c.icon;
               return (
-                <div key={c.title} className="bg-white rounded-2xl p-6 text-center border border-slate-100 hover:shadow-lg transition-shadow">
-                  <div className="w-14 h-14 bg-brand-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Icon className="text-brand-600" size={26} />
+                <div key={c.title} className="bg-white/10 backdrop-blur-md rounded-2xl p-6 text-center border border-white/10 hover:bg-white/15 transition-all">
+                  <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Icon className="text-white" size={26} />
                   </div>
-                  <h3 className="font-bold text-slate-800 mb-1">{c.title}</h3>
-                  <p className="text-sm text-slate-700 font-medium">{c.value}</p>
+                  <h3 className="font-bold text-white mb-1">{c.title}</h3>
+                  <p className="text-sm text-cyan-100 font-medium">{c.value}</p>
                   <p className="text-xs text-slate-400 mt-1">{c.sub}</p>
                 </div>
               );
             })}
           </div>
           <div className="text-center mt-12">
-            <button onClick={() => setView('signup')} className="btn-primary"><CalendarClock size={18} /> Register as Patient</button>
+            <button onClick={() => setView('signup')} className="inline-flex items-center gap-2 px-6 py-3 bg-white text-brand-700 rounded-xl font-semibold shadow-xl hover:scale-105 transition-all"><CalendarClock size={18} /> Register as Patient</button>
           </div>
         </div>
       </section>
@@ -630,6 +635,26 @@ function InquiryForm() {
           {loading ? 'Sending...' : <><Send size={18} /> Send Inquiry</>}
         </button>
       </form>
+    </div>
+  );
+}
+
+// ============ Reviews Page ============
+function ReviewsPage({ setView, onBackToDashboard }: { setView: (v: View) => void; onBackToDashboard?: () => void }) {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+      <NavBar setView={setView} onBackToDashboard={onBackToDashboard} />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <button onClick={() => setView('home')} className="flex items-center gap-2 text-sm text-slate-500 hover:text-brand-600 transition-colors mb-6">
+          <ArrowLeft size={16} /> Back to Home
+        </button>
+        <div className="text-center mb-10">
+          <span className="text-brand-600 font-semibold text-sm uppercase tracking-wide flex items-center justify-center gap-2"><Sparkles size={16} /> Patient Feedback</span>
+          <h1 className="text-4xl font-bold text-slate-800 mt-2 mb-3">Patient Reviews</h1>
+          <p className="text-slate-500 max-w-2xl mx-auto">Read what our patients have to say about their experience at MediCare, and share your own story.</p>
+        </div>
+        <ReviewSystem />
+      </div>
     </div>
   );
 }
