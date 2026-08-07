@@ -58,7 +58,7 @@ function StaffDashboard({ user, signOut, onShowWebsite }: { user: { full_name: s
   }, [user, page]);
 
   const pages: Record<PageId, React.ReactNode> = {
-    dashboard: <DashboardPage />,
+    dashboard: <DashboardPage onNavigate={setPage} />,
     patients: <PatientsPage />,
     appointments: <AppointmentsPage />,
     admissions: <AdmissionsPage />,
