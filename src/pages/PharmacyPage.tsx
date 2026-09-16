@@ -4,7 +4,7 @@ import type { Medicine, MedicineStock } from '@/lib/types';
 import { PageHeader, LoadingSpinner, StatusBadge, EmptyState, StatCard } from '@/components/ui';
 import { Modal } from '@/components/Modal';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { Pill, AlertCircle, Package, Plus, Search, Calendar } from 'lucide-react';
+import { Pill, AlertCircle, Package, Plus, Search, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export function PharmacyPage() {
   const [medicines, setMedicines] = useState<any[]>([]);
@@ -12,6 +12,8 @@ export function PharmacyPage() {
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [lowStockOnly, setLowStockOnly] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     loadMedicines();
@@ -42,8 +44,14 @@ export function PharmacyPage() {
       (m.generic_name || '').toLowerCase().includes(search.toLowerCase());
     const totalStock = (m.medicine_stocks || []).reduce((s: number, st: MedicineStock) => s + st.quantity, 0);
     const matchesLowStock = !lowStockOnly || totalStock <= m.reorder_level;
-    return matchesSearch && matchesLowStock;
+    const matchesCategory = categoryFilter === 'All' || m.category === categoryFilter;
+    return matchesSearch && matchesLowStock && matchesCategory;
   });
+
+  const categories = ['All', ...new Set(medicines.map((m) => m.category).filter(Boolean))];
+  const ITEMS_PER_PAGE = 10;
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginated = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   const lowStockCount = medicines.filter((m) => {
     const total = (m.medicine_stocks || []).reduce((s: number, st: MedicineStock) => s + st.quantity, 0);
@@ -86,6 +94,9 @@ export function PharmacyPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+        <select className="input sm:w-48" value={categoryFilter} onChange={(e) => { setCategoryFilter(e.target.value); setCurrentPage(1); }}>
+          {categories.map((c) => <option key={c}>{c}</option>)}
+        </select>
         <button
           onClick={() => setLowStockOnly(!lowStockOnly)}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -111,7 +122,7 @@ export function PharmacyPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {filtered.map((m) => {
+              {paginated.map((m) => {
                 const totalStock = (m.medicine_stocks || []).reduce((s: number, st: MedicineStock) => s + st.quantity, 0);
                 const isLow = totalStock <= m.reorder_level;
                 const expiringSoon = (m.medicine_stocks || []).some((st: MedicineStock) => {
@@ -156,6 +167,25 @@ export function PharmacyPage() {
             </tbody>
           </table>
           {filtered.length === 0 && <EmptyState message="No medicines found" />}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 p-4 border-t border-slate-100">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 transition-colors"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <span className="text-sm text-slate-600">Page {currentPage} of {totalPages}</span>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 transition-colors"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

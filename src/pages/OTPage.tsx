@@ -4,7 +4,7 @@ import type { OTSchedule } from '@/lib/types';
 import { PageHeader, LoadingSpinner, StatusBadge, EmptyState, StatCard } from '@/components/ui';
 import { Modal } from '@/components/Modal';
 import { formatDate, formatTime } from '@/lib/utils';
-import { Scissors, Plus, Clock, User, Building } from 'lucide-react';
+import { Scissors, Plus, Clock, User, Building, Search } from 'lucide-react';
 
 export function OTPage() {
   const [schedules, setSchedules] = useState<OTSchedule[]>([]);
@@ -12,6 +12,7 @@ export function OTPage() {
   const [staff, setStaff] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     loadData();
@@ -21,7 +22,7 @@ export function OTPage() {
     setLoading(true);
     const [{ data: s }, { data: p }, { data: st }] = await Promise.all([
       supabase.from('ot_schedules').select('*').order('scheduled_date'),
-      supabase.from('patients').select('id, name, department').eq('status', 'Active'),
+      supabase.from('patients').select('id, name, department, opd_number, ipd_number').eq('status', 'Active'),
       supabase.from('staff').select('id, name, department').eq('role', 'Doctor').eq('status', 'Active'),
     ]);
     setSchedules(s || []);
@@ -50,6 +51,13 @@ export function OTPage() {
   const scheduled = schedules.filter((s) => s.status === 'Scheduled').length;
   const completed = schedules.filter((s) => s.status === 'Completed').length;
 
+  const filtered = schedules.filter((s) => {
+    const q = search.toLowerCase();
+    return s.patient_name?.toLowerCase().includes(q) ||
+      s.surgery_name.toLowerCase().includes(q) ||
+      (s.surgeon_name || '').toLowerCase().includes(q);
+  });
+
   if (loading) return <LoadingSpinner />;
 
   return (
@@ -71,12 +79,19 @@ export function OTPage() {
         <StatCard label="OT Rooms" value={new Set(schedules.map((s) => s.ot_room).filter(Boolean)).size || 2} icon={<Building size={22} />} color="blue" />
       </div>
 
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className="relative flex-1">
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input className="input pl-10" placeholder="Search by patient, surgery, or surgeon..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        </div>
+      </div>
+
       <div className="card overflow-hidden">
-        {schedules.length === 0 ? (
-          <EmptyState message="No surgeries scheduled" />
+        {filtered.length === 0 ? (
+          <EmptyState message="No surgeries found" />
         ) : (
           <div className="divide-y divide-slate-50">
-            {schedules.map((s) => (
+            {filtered.map((s) => (
               <div key={s.id} className="p-4 hover:bg-slate-50 transition-colors">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3 flex-1">
@@ -147,7 +162,7 @@ function SurgeryFormModal({ onClose, onSubmit, patients, staff }: { onClose: () 
           <select className="input" required value={form.patient_id} onChange={(e) => setForm({ ...form, patient_id: e.target.value })}>
             <option value="">Select patient</option>
             {patients.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
+              <option key={p.id} value={p.id}>{p.name} {p.ipd_number ? `(${p.ipd_number})` : `(${p.opd_number || ''})`}</option>
             ))}
           </select>
         </div>

@@ -4,7 +4,7 @@ import type { LabTest, LabOrder } from '@/lib/types';
 import { PageHeader, LoadingSpinner, StatusBadge, EmptyState, StatCard } from '@/components/ui';
 import { Modal } from '@/components/Modal';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
-import { FlaskConical, Plus, Search, Microscope, FileCheck, Clock } from 'lucide-react';
+import { FlaskConical, Plus, Search, Microscope, FileCheck, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 
 type Tab = 'orders' | 'catalog';
 
@@ -15,6 +15,8 @@ export function LabPage() {
   const [patients, setPatients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [catalogPage, setCatalogPage] = useState(1);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [showTestModal, setShowTestModal] = useState(false);
 
@@ -27,7 +29,7 @@ export function LabPage() {
     const [{ data: o }, { data: t }, { data: p }] = await Promise.all([
       supabase.from('lab_orders').select('*').order('created_at', { ascending: false }),
       supabase.from('lab_tests').select('*').order('test_name'),
-      supabase.from('patients').select('id, name, assigned_doctor').eq('status', 'Active'),
+      supabase.from('patients').select('id, name, assigned_doctor, opd_number, ipd_number').eq('status', 'Active'),
     ]);
     setOrders(o || []);
     setTests(t || []);
@@ -72,8 +74,20 @@ export function LabPage() {
 
   const filteredOrders = orders.filter((o) =>
     o.patient_name?.toLowerCase().includes(search.toLowerCase()) ||
-    o.test_name.toLowerCase().includes(search.toLowerCase())
+    o.test_name.toLowerCase().includes(search.toLowerCase()) ||
+    (o.test_category || '').toLowerCase().includes(search.toLowerCase())
   );
+
+  const categories = ['All', ...new Set(tests.map((t) => t.category).filter(Boolean))];
+  const filteredTests = tests.filter((t) => {
+    const matchesCategory = categoryFilter === 'All' || t.category === categoryFilter;
+    const matchesSearch = !search || t.test_name.toLowerCase().includes(search.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  const ITEMS_PER_PAGE = 9;
+  const totalPages = Math.ceil(filteredTests.length / ITEMS_PER_PAGE);
+  const paginatedTests = filteredTests.slice((catalogPage - 1) * ITEMS_PER_PAGE, catalogPage * ITEMS_PER_PAGE);
 
   const pending = orders.filter((o) => o.status === 'Ordered').length;
   const completed = orders.filter((o) => o.status === 'Completed').length;
@@ -179,25 +193,56 @@ export function LabPage() {
       )}
 
       {tab === 'catalog' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {tests.map((t) => (
-            <div key={t.id} className="card-hover p-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h4 className="font-semibold text-slate-700">{t.test_name}</h4>
-                  <p className="text-xs text-slate-400 mt-1">{t.category} · {t.department}</p>
-                </div>
-                <span className="font-bold text-brand-600">{formatCurrency(t.price)}</span>
-              </div>
-              {t.sample_type && (
-                <p className="text-xs text-slate-500 mt-2">Sample: {t.sample_type}</p>
-              )}
-              {t.normal_range && t.normal_range !== 'N/A' && (
-                <p className="text-xs text-slate-500">Normal: {t.normal_range}</p>
-              )}
+        <>
+          <div className="flex flex-col sm:flex-row gap-3 mb-4">
+            <div className="relative flex-1">
+              <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input className="input pl-10" placeholder="Search tests..." value={search} onChange={(e) => { setSearch(e.target.value); setCatalogPage(1); }} />
             </div>
-          ))}
-        </div>
+            <select className="input sm:w-48" value={categoryFilter} onChange={(e) => { setCategoryFilter(e.target.value); setCatalogPage(1); }}>
+              {categories.map((c) => <option key={c}>{c}</option>)}
+            </select>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {paginatedTests.map((t) => (
+              <div key={t.id} className="card-hover p-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h4 className="font-semibold text-slate-700">{t.test_name}</h4>
+                    <p className="text-xs text-slate-400 mt-1">{t.category} · {t.department}</p>
+                  </div>
+                  <span className="font-bold text-brand-600">{formatCurrency(t.price)}</span>
+                </div>
+                {t.sample_type && (
+                  <p className="text-xs text-slate-500 mt-2">Sample: {t.sample_type}</p>
+                )}
+                {t.normal_range && t.normal_range !== 'N/A' && (
+                  <p className="text-xs text-slate-500">Normal: {t.normal_range}</p>
+                )}
+              </div>
+            ))}
+          </div>
+          {paginatedTests.length === 0 && <EmptyState message="No tests found" />}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-6">
+              <button
+                onClick={() => setCatalogPage((p) => Math.max(1, p - 1))}
+                disabled={catalogPage === 1}
+                className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 transition-colors"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <span className="text-sm text-slate-600">Page {catalogPage} of {totalPages}</span>
+              <button
+                onClick={() => setCatalogPage((p) => Math.min(totalPages, p + 1))}
+                disabled={catalogPage === totalPages}
+                className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 transition-colors"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {showOrderModal && (
@@ -226,7 +271,7 @@ function OrderFormModal({ onClose, onSubmit, patients, tests }: { onClose: () =>
           <select className="input" required value={form.patient_id} onChange={(e) => setForm({ ...form, patient_id: e.target.value })}>
             <option value="">Select patient</option>
             {patients.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
+              <option key={p.id} value={p.id}>{p.name} {p.ipd_number ? `(${p.ipd_number})` : `(${p.opd_number || ''})`}</option>
             ))}
           </select>
         </div>

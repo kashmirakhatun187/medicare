@@ -4,13 +4,14 @@ import type { Visitor, Patient } from '@/lib/types';
 import { PageHeader, LoadingSpinner, StatusBadge, EmptyState, StatCard, Avatar } from '@/components/ui';
 import { Modal } from '@/components/Modal';
 import { formatDateTime } from '@/lib/utils';
-import { UserPlus, LogIn, LogOut, Users, Clock, CheckCircle } from 'lucide-react';
+import { UserPlus, LogIn, LogOut, Users, Clock, CheckCircle, Search } from 'lucide-react';
 
 export function VisitorsPage() {
   const [visitors, setVisitors] = useState<Visitor[]>([]);
-  const [patients, setPatients] = useState<{ id: string; name: string }[]>([]);
+  const [patients, setPatients] = useState<{ id: string; name: string; opd_number: string | null; ipd_number: string | null }[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     loadData();
@@ -20,7 +21,7 @@ export function VisitorsPage() {
     setLoading(true);
     const [{ data: v }, { data: p }] = await Promise.all([
       supabase.from('visitors').select('*').order('check_in', { ascending: false }),
-      supabase.from('patients').select('id, name').eq('patient_type', 'IPD').eq('status', 'Admitted'),
+      supabase.from('patients').select('id, name, opd_number, ipd_number').eq('patient_type', 'IPD').eq('status', 'Admitted'),
     ]);
     setVisitors(v || []);
     setPatients(p || []);
@@ -49,6 +50,13 @@ export function VisitorsPage() {
   const checkedIn = visitors.filter((v) => v.status === 'Checked In').length;
   const checkedOut = visitors.filter((v) => v.status === 'Checked Out').length;
 
+  const filtered = visitors.filter((v) => {
+    const q = search.toLowerCase();
+    return v.visitor_name.toLowerCase().includes(q) ||
+      (v.patient_name || '').toLowerCase().includes(q) ||
+      (v.phone || '').includes(search);
+  });
+
   if (loading) return <LoadingSpinner />;
 
   return (
@@ -70,6 +78,13 @@ export function VisitorsPage() {
         <StatCard label="IPD Patients" value={patients.length} icon={<Clock size={22} />} color="amber" />
       </div>
 
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className="relative flex-1">
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input className="input pl-10" placeholder="Search by visitor or patient name, phone..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        </div>
+      </div>
+
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -87,7 +102,7 @@ export function VisitorsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {visitors.map((v) => (
+              {filtered.map((v) => (
                 <tr key={v.id} className="hover:bg-slate-50 transition-colors">
                   <td className="table-cell">
                     <div className="flex items-center gap-2">
@@ -116,7 +131,7 @@ export function VisitorsPage() {
               ))}
             </tbody>
           </table>
-          {visitors.length === 0 && <EmptyState message="No visitors recorded" />}
+          {filtered.length === 0 && <EmptyState message="No visitors found" />}
         </div>
       </div>
 
@@ -125,7 +140,7 @@ export function VisitorsPage() {
   );
 }
 
-function VisitorFormModal({ onClose, onSubmit, patients }: { onClose: () => void; onSubmit: (f: any) => void; patients: { id: string; name: string }[] }) {
+function VisitorFormModal({ onClose, onSubmit, patients }: { onClose: () => void; onSubmit: (f: any) => void; patients: { id: string; name: string; opd_number: string | null; ipd_number: string | null }[] }) {
   const [form, setForm] = useState({
     visitor_name: '', patient_id: '', relationship: '', phone: '', id_proof: 'Aadhaar', purpose: 'General Visit',
   });
@@ -142,7 +157,7 @@ function VisitorFormModal({ onClose, onSubmit, patients }: { onClose: () => void
           <select className="input" required value={form.patient_id} onChange={(e) => setForm({ ...form, patient_id: e.target.value })}>
             <option value="">Select patient</option>
             {patients.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
+              <option key={p.id} value={p.id}>{p.name} {p.ipd_number ? `(${p.ipd_number})` : `(${p.opd_number || ''})`}</option>
             ))}
           </select>
         </div>

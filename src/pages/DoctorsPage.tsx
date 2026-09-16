@@ -4,13 +4,14 @@ import type { Staff } from '@/lib/types';
 import { PageHeader, LoadingSpinner, Avatar, StatusBadge } from '@/components/ui';
 import { Modal } from '@/components/Modal';
 import { formatCurrency } from '@/lib/utils';
-import { Stethoscope, HeartPulse, UserPlus, Phone, Mail, BadgeCheck } from 'lucide-react';
+import { Stethoscope, HeartPulse, UserPlus, Phone, Mail, BadgeCheck, Search } from 'lucide-react';
 
 export function DoctorsPage() {
   const [staff, setStaff] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterRole, setFilterRole] = useState('All');
   const [showModal, setShowModal] = useState(false);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     loadStaff();
@@ -29,7 +30,15 @@ export function DoctorsPage() {
     loadStaff();
   }
 
-  const filtered = staff.filter((s) => filterRole === 'All' || s.role === filterRole);
+  const filtered = staff.filter((s) => {
+    const matchesRole = filterRole === 'All' || s.role === filterRole;
+    const q = search.toLowerCase();
+    const matchesSearch = !search || s.name.toLowerCase().includes(q) ||
+      (s.specialization || '').toLowerCase().includes(q) ||
+      (s.department || '').toLowerCase().includes(q) ||
+      (s.phone || '').includes(search);
+    return matchesRole && matchesSearch;
+  });
   const doctors = staff.filter((s) => s.role === 'Doctor');
   const nurses = staff.filter((s) => s.role === 'Nurse');
 
@@ -48,7 +57,12 @@ export function DoctorsPage() {
         }
       />
 
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        <div className="relative flex-1">
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input className="input pl-10" placeholder="Search by name, specialization, department, or phone..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-1">
         {['All', 'Doctor', 'Nurse', 'Technician'].map((r) => (
           <button
             key={r}
@@ -60,6 +74,7 @@ export function DoctorsPage() {
             {r === 'All' ? 'All Staff' : r + 's'}
           </button>
         ))}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -1,6 +1,10 @@
 export interface Patient {
   id: string;
   mrn: string;
+  opd_number: string | null;
+  ipd_number: string | null;
+  current_bed_id: string | null;
+  current_ward_name: string | null;
   name: string;
   age: number | null;
   gender: string | null;
