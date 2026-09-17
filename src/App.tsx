@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 import { AuthProvider, useAuth, type UserRole } from '@/lib/auth';
 import { isStaff } from '@/lib/roles';
 import { PublicSite } from '@/pages/PublicSite';
@@ -27,7 +28,7 @@ import { UserManagementPage } from '@/pages/UserManagementPage';
 import { InquiriesPage } from '@/pages/InquiriesPage';
 import { canAccess, ROLE_LABELS, ROLE_COLORS } from '@/lib/roles';
 import { LoadingSpinner } from '@/components/ui';
-import { Menu, Bell, LogOut, Globe, ChevronDown, Settings, UserCircle } from 'lucide-react';
+import { Menu, Bell, LogOut, Globe } from 'lucide-react';
 
 function AppContent() {
   const { user, loading, signOut } = useAuth();
@@ -57,6 +58,61 @@ function StaffDashboard({ user, signOut, onShowWebsite }: { user: { full_name: s
       setPage('dashboard');
     }
   }, [user, page]);
+
+  useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let cancelled = false;
+
+    async function subscribeToHospitalEvents() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session || cancelled) return;
+
+      // Authenticate the Realtime client before joining the private channel.
+      await supabase.realtime.setAuth(session.access_token);
+
+      if (cancelled) return;
+
+      channel = supabase
+        .channel('hospital:operations', {
+          config: {
+            private: true,
+          },
+        })
+        .on('broadcast', { event: 'record_changed' }, ({ payload }) => {
+          const { table, operation, record_id } = payload as {
+            table?: string;
+            operation?: string;
+            record_id?: string;
+          };
+
+          console.log('Hospital update:', { table, operation, record_id });
+
+          // Add page-specific refetch/invalidation here when needed.
+        })
+        .subscribe((status, error) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('Connected to hospital realtime events');
+          }
+
+          if (error) {
+            console.error('Realtime subscription failed:', error);
+          }
+        });
+    }
+
+    void subscribeToHospitalEvents();
+
+    return () => {
+      cancelled = true;
+      if (channel) {
+        void supabase.removeChannel(channel);
+        channel = null;
+      }
+    };
+  }, [user.id]);
 
   const pages: Record<PageId, React.ReactNode> = {
     dashboard: <DashboardPage onNavigate={setPage} />,
