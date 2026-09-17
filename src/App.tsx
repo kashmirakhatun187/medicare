@@ -4,6 +4,7 @@ import { isStaff } from '@/lib/roles';
 import { PublicSite } from '@/pages/PublicSite';
 import { PatientPortal } from '@/pages/PatientPortal';
 import { Sidebar, type PageId } from '@/components/Sidebar';
+import { PatientSearch } from '@/components/PatientSearch';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { PatientsPage } from '@/pages/PatientsPage';
 import { AppointmentsPage } from '@/pages/AppointmentsPage';
@@ -110,6 +111,9 @@ function StaffDashboard({ user, signOut, onShowWebsite }: { user: { full_name: s
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <div className="hidden md:block w-64">
+              <PatientSearch onSelect={() => {}} placeholder="Search patient globally..." />
+            </div>
             <button
               onClick={onShowWebsite}
               className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-brand-600 hover:bg-brand-50 px-3 py-2 rounded-xl transition-all hover:scale-105"

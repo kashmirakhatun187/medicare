@@ -519,7 +519,7 @@ function VitalFormModal({ onClose, onSubmit, patients }: { onClose: () => void; 
           <label className="label">Patient *</label>
           <select className="input" required value={form.patient_id} onChange={(e) => setForm({ ...form, patient_id: e.target.value })}>
             <option value="">Select patient</option>
-            {patients.map((p) => (<option key={p.id} value={p.id}>{p.name} {p.ipd_number ? `(${p.ipd_number})` : `(${p.opd_number || ''})`}</option>))}
+            {patients.map((p) => (<option key={p.id} value={p.id}>{p.name} {p.ipd_number ? `(${p.ipd_number})` : `(${p.opd_number || ''})`}{p.current_ward_name ? ` · ${p.current_ward_name}` : ''}</option>))}
           </select>
         </div>
         <div className="grid grid-cols-2 gap-4">
@@ -580,7 +580,7 @@ function NoteFormModal({ onClose, onSubmit, patients, nurses }: { onClose: () =>
             <label className="label">Patient *</label>
             <select className="input" required value={form.patient_id} onChange={(e) => setForm({ ...form, patient_id: e.target.value })}>
               <option value="">Select patient</option>
-              {patients.map((p) => (<option key={p.id} value={p.id}>{p.name} {p.ipd_number ? `(${p.ipd_number})` : `(${p.opd_number || ''})`}</option>))}
+              {patients.map((p) => (<option key={p.id} value={p.id}>{p.name} {p.ipd_number ? `(${p.ipd_number})` : `(${p.opd_number || ''})`}{p.current_ward_name ? ` · ${p.current_ward_name}` : ''}</option>))}
             </select>
           </div>
           <div>
@@ -631,7 +631,7 @@ function MedFormModal({ onClose, onSubmit, patients, nurses }: { onClose: () => 
             <label className="label">Patient *</label>
             <select className="input" required value={form.patient_id} onChange={(e) => setForm({ ...form, patient_id: e.target.value })}>
               <option value="">Select patient</option>
-              {patients.map((p) => (<option key={p.id} value={p.id}>{p.name} {p.ipd_number ? `(${p.ipd_number})` : `(${p.opd_number || ''})`}</option>))}
+              {patients.map((p) => (<option key={p.id} value={p.id}>{p.name} {p.ipd_number ? `(${p.ipd_number})` : `(${p.opd_number || ''})`}{p.current_ward_name ? ` · ${p.current_ward_name}` : ''}</option>))}
             </select>
           </div>
           <div>
@@ -677,7 +677,7 @@ function AssignFormModal({ onClose, onSubmit, patients, nurses }: { onClose: () 
           <label className="label">Patient *</label>
           <select className="input" required value={form.patient_id} onChange={(e) => setForm({ ...form, patient_id: e.target.value })}>
             <option value="">Select patient</option>
-            {patients.map((p) => (<option key={p.id} value={p.id}>{p.name} {p.ipd_number ? `(${p.ipd_number})` : `(${p.opd_number || ''})`}</option>))}
+            {patients.map((p) => (<option key={p.id} value={p.id}>{p.name} {p.ipd_number ? `(${p.ipd_number})` : `(${p.opd_number || ''})`}{p.current_ward_name ? ` · ${p.current_ward_name}` : ''}</option>))}
           </select>
         </div>
         <div>

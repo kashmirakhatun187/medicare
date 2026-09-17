@@ -1,5 +1,6 @@
 export interface Patient {
   id: string;
+  patient_id: string | null;
   mrn: string;
   opd_number: string | null;
   ipd_number: string | null;

@@ -4,7 +4,7 @@ import type { Patient } from '@/lib/types';
 import { PageHeader, LoadingSpinner, Avatar, StatusBadge, EmptyState } from '@/components/ui';
 import { Modal } from '@/components/Modal';
 import { formatDate } from '@/lib/utils';
-import { UserPlus, Search, Phone, Mail, MapPin, Droplet, AlertTriangle, BedDouble, ArrowRightLeft, Hash } from 'lucide-react';
+import { UserPlus, Search, Phone, Mail, MapPin, Droplet, AlertTriangle, BedDouble, ArrowRightLeft, Hash, FileText, Activity, FlaskConical, Pill, CreditCard, Stethoscope, Calendar, HeartPulse } from 'lucide-react';
 
 const DEPARTMENTS = [
   'General Medicine', 'General Surgery', 'Orthopedics', 'Gynecology & Obstetrics',
@@ -50,6 +50,7 @@ export function PatientsPage() {
     const matchesSearch =
       p.name.toLowerCase().includes(q) ||
       p.mrn.toLowerCase().includes(q) ||
+      (p.patient_id || '').toLowerCase().includes(q) ||
       (p.phone || '').includes(search) ||
       (p.opd_number || '').toLowerCase().includes(q) ||
       (p.ipd_number || '').toLowerCase().includes(q) ||
@@ -59,11 +60,13 @@ export function PatientsPage() {
   });
 
   async function registerPatient(form: any) {
-    const mrn = 'MRN' + String(Date.now()).slice(-6);
+    const { data: patientId } = await supabase.rpc('generate_patient_id');
     const { data: opdNum } = await supabase.rpc('generate_opd_number');
+    const mrn = 'MRN' + String(Date.now()).slice(-6);
     const insertData: any = {
       ...form,
       mrn,
+      patient_id: patientId,
       patient_type: form.patient_type,
       status: 'Active',
     };
@@ -143,7 +146,7 @@ export function PatientsPage() {
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             className="input pl-10"
-            placeholder="Search by name, MRN, OPD/IPD number, phone, or ward..."
+            placeholder="Search by Patient ID, OPD/IPD number, name, phone, or ward..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -187,6 +190,7 @@ export function PatientsPage() {
                   </td>
                   <td className="table-cell">
                     <div className="space-y-0.5">
+                      {p.patient_id && <p className="font-mono text-xs font-bold text-brand-600">{p.patient_id}</p>}
                       {p.opd_number && <p className="font-mono text-xs text-blue-600">{p.opd_number}</p>}
                       {p.ipd_number && <p className="font-mono text-xs text-rose-600">{p.ipd_number}</p>}
                       <p className="font-mono text-xs text-slate-400">{p.mrn}</p>
@@ -443,6 +447,7 @@ function ConvertToIPDModal({
 function PatientDetailModal({ patient, onClose }: { patient: Patient; onClose: () => void }) {
   const [vitals, setVitals] = useState<any[]>([]);
   const [prescriptions, setPrescriptions] = useState<any[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
     supabase.from('vitals').select('*').eq('patient_id', patient.id).order('recorded_at', { ascending: false }).limit(5)
@@ -456,10 +461,11 @@ function PatientDetailModal({ patient, onClose }: { patient: Patient; onClose: (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
           <Avatar name={patient.name} size="lg" />
-          <div>
+          <div className="flex-1">
             <h3 className="text-xl font-bold text-slate-800">{patient.name}</h3>
-            <p className="text-sm text-slate-500">{patient.mrn} · {patient.age}y {patient.gender} · {patient.blood_group}</p>
+            <p className="text-sm text-slate-500">{patient.age}y {patient.gender} · {patient.blood_group}</p>
             <div className="flex flex-wrap gap-2 mt-2">
+              {patient.patient_id && <span className="badge-teal font-mono text-xs font-bold">{patient.patient_id}</span>}
               {patient.opd_number && <span className="badge-blue font-mono text-xs">{patient.opd_number}</span>}
               {patient.ipd_number && <span className="badge-red font-mono text-xs">{patient.ipd_number}</span>}
               <span className={patient.patient_type === 'IPD' ? 'badge-red' : 'badge-blue'}>{patient.patient_type}</span>
@@ -467,6 +473,9 @@ function PatientDetailModal({ patient, onClose }: { patient: Patient; onClose: (
               <span className="badge-teal">{patient.department}</span>
             </div>
           </div>
+          <button onClick={() => setShowHistory(true)} className="btn-secondary text-sm whitespace-nowrap">
+            <Activity size={16} /> Full History
+          </button>
         </div>
 
         {patient.current_ward_name && (
@@ -552,6 +561,91 @@ function PatientDetailModal({ patient, onClose }: { patient: Patient; onClose: (
           </div>
         )}
       </div>
+      {showHistory && <PatientHistoryModal patient={patient} onClose={() => setShowHistory(false)} />}
+    </Modal>
+  );
+}
+
+function PatientHistoryModal({ patient, onClose }: { patient: Patient; onClose: () => void }) {
+  const [loading, setLoading] = useState(true);
+  const [vitals, setVitals] = useState<any[]>([]);
+  const [prescriptions, setPrescriptions] = useState<any[]>([]);
+  const [labOrders, setLabOrders] = useState<any[]>([]);
+  const [bills, setBills] = useState<any[]>([]);
+  const [admissions, setAdmissions] = useState<any[]>([]);
+  const [appointments, setAppointments] = useState<any[]>([]);
+  const [otSchedules, setOTSchedules] = useState<any[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const [v, p, l, b, a, ap, ot] = await Promise.all([
+        supabase.from('vitals').select('*').eq('patient_id', patient.id).order('recorded_at', { ascending: false }),
+        supabase.from('prescriptions').select('*').eq('patient_id', patient.id).order('created_at', { ascending: false }),
+        supabase.from('lab_orders').select('*').eq('patient_id', patient.id).order('ordered_at', { ascending: false }),
+        supabase.from('bills').select('*').eq('patient_id', patient.id).order('created_at', { ascending: false }),
+        supabase.from('admissions').select('*').eq('patient_id', patient.id).order('admission_date', { ascending: false }),
+        supabase.from('appointments').select('*').eq('patient_id', patient.id).order('appointment_date', { ascending: false }),
+        supabase.from('ot_schedules').select('*').eq('patient_id', patient.id).order('scheduled_date', { ascending: false }),
+      ]);
+      setVitals(v.data || []);
+      setPrescriptions(p.data || []);
+      setLabOrders(l.data || []);
+      setBills(b.data || []);
+      setAdmissions(a.data || []);
+      setAppointments(ap.data || []);
+      setOTSchedules(ot.data || []);
+      setLoading(false);
+    })();
+  }, [patient.id]);
+
+  type TimelineEvent = { date: string; type: string; title: string; detail: string; icon: any; color: string };
+  const events: TimelineEvent[] = [
+    ...vitals.map((v) => ({ date: v.recorded_at, type: 'Vital', title: `Vitals recorded by ${v.recorded_by || 'Staff'}`, detail: `Temp: ${v.temperature}°C, BP: ${v.blood_pressure_systolic}/${v.blood_pressure_diastolic}, Pulse: ${v.pulse}, SpO2: ${v.oxygen_saturation}%`, icon: HeartPulse, color: 'rose' })),
+    ...prescriptions.map((p) => ({ date: p.created_at, type: 'Prescription', title: `Prescription: ${p.diagnosis || 'N/A'}`, detail: `By ${p.doctor_name || 'Doctor'} · ${(p.medicines || []).length} medicine(s)`, icon: FileText, color: 'blue' })),
+    ...labOrders.map((l) => ({ date: l.ordered_at, type: 'Lab', title: `Lab test: ${l.test_name}`, detail: `Status: ${l.status}${l.result ? ` · Result: ${l.result} ${l.result_units || ''}` : ''}`, icon: FlaskConical, color: 'cyan' })),
+    ...bills.map((b) => ({ date: b.created_at, type: 'Billing', title: `Bill ${b.bill_number}`, detail: `${b.bill_type} · Total: ₹${b.total} · ${b.payment_status}`, icon: CreditCard, color: 'emerald' })),
+    ...admissions.map((a) => ({ date: a.admission_date, type: 'Admission', title: `Admitted to ${a.ward_name || 'ward'}`, detail: `Bed: ${a.bed_number || 'N/A'} · Reason: ${a.reason || 'N/A'} · Status: ${a.status}`, icon: BedDouble, color: 'amber' })),
+    ...appointments.map((a) => ({ date: a.appointment_date, type: 'Appointment', title: `Appointment with ${a.doctor_name || 'Doctor'}`, detail: `Dept: ${a.department || 'N/A'} · Time: ${a.appointment_time || 'N/A'} · Status: ${a.status}`, icon: Calendar, color: 'brand' })),
+    ...otSchedules.map((o) => ({ date: o.scheduled_date, type: 'Surgery', title: `Surgery: ${o.surgery_name}`, detail: `Surgeon: ${o.surgeon_name || 'N/A'} · OT: ${o.ot_room} · Status: ${o.status}`, icon: Stethoscope, color: 'rose' })),
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const colorMap: Record<string, string> = {
+    rose: 'bg-rose-50 text-rose-600',
+    blue: 'bg-blue-50 text-blue-600',
+    cyan: 'bg-cyan-50 text-cyan-600',
+    emerald: 'bg-emerald-50 text-emerald-600',
+    amber: 'bg-amber-50 text-amber-600',
+    brand: 'bg-brand-50 text-brand-600',
+  };
+
+  return (
+    <Modal isOpen={true} onClose={onClose} title={`Medical History — ${patient.name}`} size="lg">
+      {loading ? (
+        <div className="py-8 text-center text-sm text-slate-400">Loading history...</div>
+      ) : events.length === 0 ? (
+        <EmptyState message="No medical history found for this patient" />
+      ) : (
+        <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+          {events.map((e, i) => {
+            const Icon = e.icon;
+            return (
+              <div key={i} className="flex gap-3">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${colorMap[e.color]}`}>
+                  <Icon size={18} />
+                </div>
+                <div className="flex-1 pb-3 border-b border-slate-50 last:border-0">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-slate-700">{e.title}</p>
+                    <span className="text-xs text-slate-400">{formatDate(e.date)}</span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">{e.detail}</p>
+                  <span className={`badge ${colorMap[e.color]} text-xs mt-1`}>{e.type}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </Modal>
   );
 }
