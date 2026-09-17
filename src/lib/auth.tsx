@@ -23,87 +23,117 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function isActive(profile: UserProfile) {
+  return profile.status.trim().toLowerCase() === 'active';
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    let mounted = true;
+
+    async function restoreSession() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!mounted) return;
+
       if (session) {
-        loadProfile(session.user.id, session.user.email || '');
+        await loadProfile(session.user.id);
       } else {
         setLoading(false);
       }
+    }
+
+    void restoreSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      if (event === 'SIGNED_IN' && session) {
+        void loadProfile(session.user.id);
+      }
     });
 
-    supabase.auth.onAuthStateChange((event, session) => {
-      (async () => {
-        if (event === 'SIGNED_IN' && session) {
-          await loadProfile(session.user.id, session.user.email || '');
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-          setLoading(false);
-        }
-      })();
-    });
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  async function loadProfile(userId: string, email: string) {
+  async function loadProfile(userId: string): Promise<string | null> {
     const { data, error } = await supabase
       .from('user_profiles')
-      .select('*')
+      .select('id, email, full_name, role, department, phone, status')
       .eq('id', userId)
       .maybeSingle();
 
-    if (error || !data) {
-      // Profile doesn't exist yet — auto-create a basic one so the user isn't stuck.
-      // This handles the race condition where signUp creates the auth user but the
-      // profile insert hasn't completed (or failed) before onAuthStateChange fires.
-      const { data: created } = await supabase
-        .from('user_profiles')
-        .insert({
-          id: userId,
-          email,
-          full_name: email.split('@')[0],
-          role: 'patient',
-          status: 'Active',
-        })
-        .select('*')
-        .maybeSingle();
-
-      if (created) {
-        setUser(created as UserProfile);
-      }
+    if (error) {
+      setUser(null);
       setLoading(false);
-      return;
+      return 'Unable to load your profile. Please try again.';
     }
-    setUser(data as UserProfile);
+
+    if (!data) {
+      setUser(null);
+      setLoading(false);
+      return 'Your account profile has not been provisioned yet. Please contact an administrator.';
+    }
+
+    const profile = data as UserProfile;
+    if (!isActive(profile)) {
+      setUser(null);
+      setLoading(false);
+      return 'Your account is inactive. Please contact an administrator.';
+    }
+
+    setUser(profile);
     setLoading(false);
+    return null;
   }
 
   async function signIn(email: string, password: string) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error?.message || null };
+    const normalizedEmail = email.trim().toLowerCase();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: normalizedEmail,
+      password,
+    });
+
+    if (error) return { error: error.message };
+    if (!data.user) return { error: 'Unable to sign in. Please try again.' };
+
+    const profileError = await loadProfile(data.user.id);
+    if (profileError) {
+      await supabase.auth.signOut();
+      return { error: profileError };
+    }
+
+    return { error: null };
   }
 
-  async function signUp(email: string, password: string, fullName: string, role: UserRole, phone?: string) {
-    const { data, error } = await supabase.auth.signUp({ email, password });
+  async function signUp(email: string, password: string, fullName: string, _role: UserRole, phone?: string) {
+    const normalizedEmail = email.trim().toLowerCase();
+    const { error } = await supabase.auth.signUp({
+      email: normalizedEmail,
+      password,
+      options: {
+        data: {
+          full_name: fullName.trim(),
+          phone: phone?.trim() || null,
+        },
+      },
+    });
+
     if (error) return { error: error.message };
 
-    if (data.user) {
-      const { error: profileError } = await supabase.from('user_profiles').insert({
-        id: data.user.id,
-        email,
-        full_name: fullName,
-        role,
-        phone: phone || null,
-        status: role === 'patient' ? 'Active' : 'Pending',
-      });
-      if (profileError) {
-        // Don't return error here — the auth account was created successfully.
-        // loadProfile will auto-create a fallback profile on sign-in.
-      }
-    }
+    // A database trigger creates the patient profile. This also works when
+    // Supabase requires email confirmation and no client session exists yet.
     return { error: null };
   }
 
