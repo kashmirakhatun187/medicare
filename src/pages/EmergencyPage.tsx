@@ -126,7 +126,7 @@ export function EmergencyPage() {
           <EmptyState message="No emergency patients" />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full responsive-table">
               <thead>
                 <tr className="border-b border-slate-100">
                   <th className="table-header">Patient</th>
@@ -140,17 +140,17 @@ export function EmergencyPage() {
               <tbody className="divide-y divide-slate-50">
                 {erPatients.map((p) => (
                   <tr key={p.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="table-cell">
+                    <td data-label="Patient" className="table-cell">
                       <div className="flex items-center gap-2">
                         <Avatar name={p.name} size="sm" />
                         <span className="font-medium text-slate-700">{p.name}</span>
                       </div>
                     </td>
-                    <td className="table-cell font-mono text-xs">{p.mrn}</td>
-                    <td className="table-cell">{p.age}y · {p.gender}</td>
-                    <td className="table-cell">{p.phone || '-'}</td>
-                    <td className="table-cell"><StatusBadge status={p.status} /></td>
-                    <td className="table-cell text-xs text-slate-500">{formatDate(p.created_at)}</td>
+                    <td data-label="MRN" className="table-cell font-mono text-xs">{p.mrn}</td>
+                    <td data-label="Age/Gender" className="table-cell">{p.age}y · {p.gender}</td>
+                    <td data-label="Contact" className="table-cell">{p.phone || '-'}</td>
+                    <td data-label="Status" className="table-cell"><StatusBadge status={p.status} /></td>
+                    <td data-label="Registered" className="table-cell text-xs text-slate-500">{formatDate(p.created_at)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -231,7 +231,7 @@ function ERFormModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (f:
   return (
     <Modal isOpen={true} onClose={onClose} title="Emergency Registration" size="md">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="form-grid">
           <div>
             <label className="label">Name *</label>
             <input className="input" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />

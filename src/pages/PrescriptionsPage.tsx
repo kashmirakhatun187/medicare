@@ -203,7 +203,7 @@ function PrescriptionFormModal({
   return (
     <Modal isOpen={true} onClose={onClose} title="New Digital Prescription" size="lg">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="form-grid">
           <div>
             <label className="label">Patient *</label>
             <select className="input" required value={form.patient_id} onChange={(e) => setForm({ ...form, patient_id: e.target.value })}>

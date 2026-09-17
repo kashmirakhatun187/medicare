@@ -108,7 +108,7 @@ export function HRPage() {
       {tab === 'employees' && (
         <div className="card overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full responsive-table">
               <thead>
                 <tr className="border-b border-slate-100">
                   <th className="table-header">Employee</th>
@@ -124,7 +124,7 @@ export function HRPage() {
               <tbody className="divide-y divide-slate-50">
                 {employees.map((e) => (
                   <tr key={e.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="table-cell">
+                    <td data-label="Employee" className="table-cell">
                       <div className="flex items-center gap-2">
                         <Avatar name={e.name} size="sm" />
                         <div>
@@ -133,19 +133,20 @@ export function HRPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="table-cell font-mono text-xs">{e.emp_id}</td>
-                    <td className="table-cell">{e.role}</td>
-                    <td className="table-cell">{e.department || '-'}</td>
-                    <td className="table-cell">
+                    <td data-label="Emp ID" className="table-cell font-mono text-xs">{e.emp_id}</td>
+                    <td data-label="Role" className="table-cell">{e.role}</td>
+                    <td data-label="Department" className="table-cell">{e.department || '-'}</td>
+                    <td data-label="Shift" className="table-cell">
                       <span className={`badge ${e.shift === 'Morning' ? 'badge-amber' : e.shift === 'Evening' ? 'badge-blue' : e.shift === 'Night' ? 'badge-gray' : 'badge-teal'}`}>{e.shift}</span>
                     </td>
-                    <td className="table-cell font-medium">{formatCurrency(e.salary)}</td>
-                    <td className="table-cell text-xs text-slate-500">{formatDate(e.joining_date)}</td>
-                    <td className="table-cell"><StatusBadge status={e.status} /></td>
+                    <td data-label="Salary" className="table-cell font-medium">{formatCurrency(e.salary)}</td>
+                    <td data-label="Joined" className="table-cell text-xs text-slate-500">{formatDate(e.joining_date)}</td>
+                    <td data-label="Status" className="table-cell"><StatusBadge status={e.status} /></td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            {employees.length === 0 && <EmptyState message="No employees found" />}
           </div>
         </div>
       )}
@@ -153,7 +154,7 @@ export function HRPage() {
       {tab === 'payroll' && (
         <div className="card overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full responsive-table">
               <thead>
                 <tr className="border-b border-slate-100">
                   <th className="table-header">Employee</th>
@@ -169,14 +170,14 @@ export function HRPage() {
               <tbody className="divide-y divide-slate-50">
                 {payrolls.map((p) => (
                   <tr key={p.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="table-cell font-medium text-slate-700">{p.emp_name}</td>
-                    <td className="table-cell">{p.month} {p.year}</td>
-                    <td className="table-cell">{formatCurrency(p.basic_salary)}</td>
-                    <td className="table-cell text-emerald-600">+{formatCurrency(p.allowances)}</td>
-                    <td className="table-cell text-rose-600">-{formatCurrency(p.deductions)}</td>
-                    <td className="table-cell font-bold">{formatCurrency(p.net_salary)}</td>
-                    <td className="table-cell"><StatusBadge status={p.status} /></td>
-                    <td className="table-cell">
+                    <td data-label="Employee" className="table-cell font-medium text-slate-700">{p.emp_name}</td>
+                    <td data-label="Month" className="table-cell">{p.month} {p.year}</td>
+                    <td data-label="Basic" className="table-cell">{formatCurrency(p.basic_salary)}</td>
+                    <td data-label="Allowances" className="table-cell text-emerald-600">+{formatCurrency(p.allowances)}</td>
+                    <td data-label="Deductions" className="table-cell text-rose-600">-{formatCurrency(p.deductions)}</td>
+                    <td data-label="Net Salary" className="table-cell font-bold">{formatCurrency(p.net_salary)}</td>
+                    <td data-label="Status" className="table-cell"><StatusBadge status={p.status} /></td>
+                    <td data-label="Action" className="table-cell">
                       {p.status === 'Pending' && (
                         <button
                           onClick={() => processPayroll(p.id)}
@@ -198,7 +199,7 @@ export function HRPage() {
       {tab === 'leaves' && (
         <div className="card overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full responsive-table">
               <thead>
                 <tr className="border-b border-slate-100">
                   <th className="table-header">Employee</th>
@@ -214,16 +215,16 @@ export function HRPage() {
               <tbody className="divide-y divide-slate-50">
                 {leaves.map((l) => (
                   <tr key={l.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="table-cell font-medium text-slate-700">{l.emp_name}</td>
-                    <td className="table-cell">
+                    <td data-label="Employee" className="table-cell font-medium text-slate-700">{l.emp_name}</td>
+                    <td data-label="Leave Type" className="table-cell">
                       <span className={`badge ${l.leave_type === 'Sick' ? 'badge-red' : l.leave_type === 'Casual' ? 'badge-blue' : 'badge-amber'}`}>{l.leave_type}</span>
                     </td>
-                    <td className="table-cell text-xs text-slate-500">{formatDate(l.start_date)}</td>
-                    <td className="table-cell text-xs text-slate-500">{formatDate(l.end_date)}</td>
-                    <td className="table-cell">{l.days}d</td>
-                    <td className="table-cell text-sm text-slate-600">{l.reason || '-'}</td>
-                    <td className="table-cell"><StatusBadge status={l.status} /></td>
-                    <td className="table-cell">
+                    <td data-label="Start" className="table-cell text-xs text-slate-500">{formatDate(l.start_date)}</td>
+                    <td data-label="End" className="table-cell text-xs text-slate-500">{formatDate(l.end_date)}</td>
+                    <td data-label="Days" className="table-cell">{l.days}d</td>
+                    <td data-label="Reason" className="table-cell text-sm text-slate-600">{l.reason || '-'}</td>
+                    <td data-label="Status" className="table-cell"><StatusBadge status={l.status} /></td>
+                    <td data-label="Action" className="table-cell">
                       {l.status === 'Pending' && (
                         <div className="flex gap-1">
                           <button onClick={() => updateLeaveStatus(l.id, 'Approved')} className="text-xs font-medium text-emerald-600 hover:text-emerald-700 px-2 py-1 rounded hover:bg-emerald-50">Approve</button>
@@ -254,7 +255,7 @@ function EmployeeFormModal({ onClose, onSubmit }: { onClose: () => void; onSubmi
   return (
     <Modal isOpen={true} onClose={onClose} title="Add Employee" size="md">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="form-grid">
           <div>
             <label className="label">Name *</label>
             <input className="input" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />

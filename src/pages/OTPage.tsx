@@ -170,7 +170,7 @@ function SurgeryFormModal({ onClose, onSubmit, patients, staff }: { onClose: () 
           <label className="label">Surgery Name *</label>
           <input className="input" required value={form.surgery_name} onChange={(e) => setForm({ ...form, surgery_name: e.target.value })} />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="form-grid">
           <div>
             <label className="label">Surgeon</label>
             <select className="input" value={form.surgeon_name} onChange={(e) => setForm({ ...form, surgeon_name: e.target.value })}>

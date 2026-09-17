@@ -81,7 +81,7 @@ export function InquiriesPage() {
           <EmptyState message="No inquiries found" />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full responsive-table">
               <thead>
                 <tr className="border-b border-slate-100">
                   <th className="table-header">Name</th>
@@ -95,7 +95,7 @@ export function InquiriesPage() {
               <tbody className="divide-y divide-slate-50">
                 {filtered.map((i) => (
                   <tr key={i.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="table-cell">
+                    <td data-label="Name" className="table-cell">
                       <div className="flex items-center gap-2">
                         <Avatar name={i.name} size="sm" />
                         <div>
@@ -104,13 +104,13 @@ export function InquiriesPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="table-cell"><span className="badge-gray">{i.category}</span></td>
-                    <td className="table-cell text-sm text-slate-600 max-w-xs truncate">{i.subject}</td>
-                    <td className="table-cell">
+                    <td data-label="Category" className="table-cell"><span className="badge-gray">{i.category}</span></td>
+                    <td data-label="Subject" className="table-cell text-sm text-slate-600 max-w-xs truncate">{i.subject}</td>
+                    <td data-label="Status" className="table-cell">
                       <span className={i.status === 'New' ? 'badge-amber' : i.status === 'Responded' ? 'badge-green' : 'badge-gray'}>{i.status}</span>
                     </td>
-                    <td className="table-cell text-xs text-slate-500">{formatDate(i.created_at)}</td>
-                    <td className="table-cell">
+                    <td data-label="Date" className="table-cell text-xs text-slate-500">{formatDate(i.created_at)}</td>
+                    <td data-label="Action" className="table-cell">
                       <button onClick={() => setSelected(i)} className="text-xs font-medium text-brand-600 hover:text-brand-700 px-2 py-1 rounded hover:bg-brand-50">View</button>
                     </td>
                   </tr>

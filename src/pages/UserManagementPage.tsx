@@ -94,7 +94,7 @@ export function UserManagementPage() {
 
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full responsive-table">
             <thead>
               <tr className="border-b border-slate-100">
                 <th className="table-header">User</th>
@@ -109,15 +109,15 @@ export function UserManagementPage() {
             <tbody className="divide-y divide-slate-50">
               {filtered.map((u) => (
                 <tr key={u.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="table-cell">
+                  <td data-label="User" className="table-cell">
                     <div className="flex items-center gap-2">
                       <Avatar name={u.full_name} size="sm" />
                       <span className="font-medium text-slate-700">{u.full_name}</span>
                       {u.id === currentUser?.id && <span className="text-xs text-brand-600 font-medium">(You)</span>}
                     </div>
                   </td>
-                  <td className="table-cell text-sm text-slate-500">{u.email}</td>
-                  <td className="table-cell">
+                  <td data-label="Email" className="table-cell text-sm text-slate-500">{u.email}</td>
+                  <td data-label="Role" className="table-cell">
                     <select
                       value={u.role}
                       onChange={(e) => updateRole(u.id, e.target.value as UserRole)}
@@ -129,10 +129,10 @@ export function UserManagementPage() {
                       ))}
                     </select>
                   </td>
-                  <td className="table-cell text-sm">{u.department || '-'}</td>
-                  <td className="table-cell text-sm">{u.phone || '-'}</td>
-                  <td className="table-cell"><StatusBadge status={u.status} /></td>
-                  <td className="table-cell">
+                  <td data-label="Department" className="table-cell text-sm">{u.department || '-'}</td>
+                  <td data-label="Phone" className="table-cell text-sm">{u.phone || '-'}</td>
+                  <td data-label="Status" className="table-cell"><StatusBadge status={u.status} /></td>
+                  <td data-label="Actions" className="table-cell">
                     {u.id !== currentUser?.id && (
                       <div className="flex gap-1">
                         {u.status === 'Pending' && (

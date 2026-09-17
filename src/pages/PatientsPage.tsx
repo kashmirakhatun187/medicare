@@ -160,7 +160,7 @@ export function PatientsPage() {
 
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full responsive-table">
             <thead>
               <tr className="border-b border-slate-100">
                 <th className="table-header">Patient</th>
@@ -179,7 +179,7 @@ export function PatientsPage() {
                   className="hover:bg-slate-50 cursor-pointer transition-colors"
                   onClick={() => setSelectedPatient(p)}
                 >
-                  <td className="table-cell">
+                  <td data-label="Patient" className="table-cell">
                     <div className="flex items-center gap-3">
                       <Avatar name={p.name} size="sm" />
                       <div>
@@ -188,7 +188,7 @@ export function PatientsPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="table-cell">
+                  <td data-label="Unique No." className="table-cell">
                     <div className="space-y-0.5">
                       {p.patient_id && <p className="font-mono text-xs font-bold text-brand-600">{p.patient_id}</p>}
                       {p.opd_number && <p className="font-mono text-xs text-blue-600">{p.opd_number}</p>}
@@ -196,10 +196,10 @@ export function PatientsPage() {
                       <p className="font-mono text-xs text-slate-400">{p.mrn}</p>
                     </div>
                   </td>
-                  <td className="table-cell">
+                  <td data-label="Type" className="table-cell">
                     <span className={p.patient_type === 'IPD' ? 'badge-red' : 'badge-blue'}>{p.patient_type}</span>
                   </td>
-                  <td className="table-cell">
+                  <td data-label="Bed / Ward" className="table-cell">
                     {p.current_ward_name ? (
                       <span className="inline-flex items-center gap-1 text-xs text-slate-600">
                         <BedDouble size={12} /> {p.current_ward_name}
@@ -208,9 +208,9 @@ export function PatientsPage() {
                       <span className="text-slate-400 text-xs">-</span>
                     )}
                   </td>
-                  <td className="table-cell">{p.department || '-'}</td>
-                  <td className="table-cell"><StatusBadge status={p.status} /></td>
-                  <td className="table-cell" onClick={(e) => e.stopPropagation()}>
+                  <td data-label="Department" className="table-cell">{p.department || '-'}</td>
+                  <td data-label="Status" className="table-cell"><StatusBadge status={p.status} /></td>
+                  <td data-label="Actions" className="table-cell" onClick={(e) => e.stopPropagation()}>
                     {p.patient_type === 'OPD' && (
                       <button
                         onClick={() => setShowConvertModal(p)}
@@ -294,7 +294,7 @@ function PatientFormModal({
         <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 text-sm text-blue-700 mb-2">
           A unique {form.patient_type} number will be auto-generated (e.g., {form.patient_type}-000123)
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="form-grid">
           <div>
             <label className="label">Full Name *</label>
             <input className="input" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />

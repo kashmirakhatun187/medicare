@@ -195,7 +195,7 @@ export function ReportsPage() {
             <EmptyState message="No bills for this patient" />
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full responsive-table">
                 <thead>
                   <tr className="border-b border-slate-100">
                     <th className="table-header">Bill No</th>
@@ -208,11 +208,11 @@ export function ReportsPage() {
                 <tbody className="divide-y divide-slate-50">
                   {r.bills.map((b: any) => (
                     <tr key={b.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="table-cell font-mono text-xs">{b.bill_number}</td>
-                      <td className="table-cell">{b.bill_type}</td>
-                      <td className="table-cell font-medium">{formatCurrency(b.total)}</td>
-                      <td className="table-cell"><StatusBadge status={b.payment_status} /></td>
-                      <td className="table-cell text-xs text-slate-500">{formatDate(b.created_at)}</td>
+                      <td data-label="Bill No" className="table-cell font-mono text-xs">{b.bill_number}</td>
+                      <td data-label="Type" className="table-cell">{b.bill_type}</td>
+                      <td data-label="Amount" className="table-cell font-medium">{formatCurrency(b.total)}</td>
+                      <td data-label="Status" className="table-cell"><StatusBadge status={b.payment_status} /></td>
+                      <td data-label="Date" className="table-cell text-xs text-slate-500">{formatDate(b.created_at)}</td>
                     </tr>
                   ))}
                 </tbody>

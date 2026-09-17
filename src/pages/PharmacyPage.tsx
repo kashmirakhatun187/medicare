@@ -109,7 +109,7 @@ export function PharmacyPage() {
 
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full responsive-table">
             <thead>
               <tr className="border-b border-slate-100">
                 <th className="table-header">Medicine</th>
@@ -132,19 +132,19 @@ export function PharmacyPage() {
                 });
                 return (
                   <tr key={m.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="table-cell">
+                    <td data-label="Medicine" className="table-cell">
                       <div>
                         <p className="font-medium text-slate-700">{m.name}</p>
                         <p className="text-xs text-slate-400">{m.generic_name} · {m.brand}</p>
                       </div>
                     </td>
-                    <td className="table-cell">{m.category}</td>
-                    <td className="table-cell">{m.form} · {m.strength}</td>
-                    <td className="table-cell">
+                    <td data-label="Category" className="table-cell">{m.category}</td>
+                    <td data-label="Form" className="table-cell">{m.form} · {m.strength}</td>
+                    <td data-label="Stock" className="table-cell">
                       <span className={`font-semibold ${isLow ? 'text-rose-600' : 'text-slate-700'}`}>{totalStock} {m.unit}</span>
                     </td>
-                    <td className="table-cell font-medium">{formatCurrency(m.selling_price)}</td>
-                    <td className="table-cell">
+                    <td data-label="Price" className="table-cell font-medium">{formatCurrency(m.selling_price)}</td>
+                    <td data-label="Batches" className="table-cell">
                       <div className="space-y-0.5">
                         {(m.medicine_stocks || []).map((st: MedicineStock) => (
                           <div key={st.id} className="text-xs text-slate-500 flex items-center gap-1">
@@ -158,7 +158,7 @@ export function PharmacyPage() {
                         ))}
                       </div>
                     </td>
-                    <td className="table-cell">
+                    <td data-label="Status" className="table-cell">
                       {isLow ? <span className="badge-red">Low Stock</span> : expiringSoon ? <span className="badge-amber">Expiring</span> : <span className="badge-green">In Stock</span>}
                     </td>
                   </tr>
@@ -218,7 +218,7 @@ function MedicineFormModal({ onClose, onSubmit }: { onClose: () => void; onSubmi
   return (
     <Modal isOpen={true} onClose={onClose} title="Add Medicine" size="md">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="form-grid">
           <div>
             <label className="label">Name *</label>
             <input className="input" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />

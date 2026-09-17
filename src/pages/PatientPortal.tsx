@@ -287,7 +287,7 @@ function AppointmentForm({ user, onClose, onCreated }: { user: any; onClose: () 
               {doctors.map((d) => <option key={d.id} value={d.id}>{d.name} — {d.department}</option>)}
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="form-grid">
             <div>
               <label className="label">Date</label>
               <input type="date" className="input" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />

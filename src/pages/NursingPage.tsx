@@ -321,7 +321,7 @@ export function NursingPage() {
             <EmptyState message="No medication administration records yet" />
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full responsive-table">
                 <thead>
                   <tr className="border-b border-slate-100">
                     <th className="table-header">Patient</th>
@@ -337,21 +337,21 @@ export function NursingPage() {
                     const shiftColor = m.shift === 'Morning' ? 'bg-amber-100 text-amber-700' : m.shift === 'Evening' ? 'bg-orange-100 text-orange-700' : 'bg-indigo-100 text-indigo-700';
                     return (
                       <tr key={m.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="table-cell">
+                        <td data-label="Patient" className="table-cell">
                           <div className="flex items-center gap-2">
                             <Avatar name={m.patient_name || ''} size="sm" />
                             <span className="font-medium">{m.patient_name}</span>
                           </div>
                         </td>
-                        <td className="table-cell text-slate-600">{m.nurse_name}</td>
-                        <td className="table-cell"><span className={`badge ${shiftColor}`}>{m.shift}</span></td>
-                        <td className="table-cell">
+                        <td data-label="Nurse" className="table-cell text-slate-600">{m.nurse_name}</td>
+                        <td data-label="Shift" className="table-cell"><span className={`badge ${shiftColor}`}>{m.shift}</span></td>
+                        <td data-label="Medication" className="table-cell">
                           <span className="inline-flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg text-xs font-medium">
                             <Pill size={12} /> {m.medication}
                           </span>
                         </td>
-                        <td className="table-cell text-xs text-slate-500">{m.care_plan || '-'}</td>
-                        <td className="table-cell text-xs text-slate-500">{formatDateTime(m.time)}</td>
+                        <td data-label="Care Plan" className="table-cell text-xs text-slate-500">{m.care_plan || '-'}</td>
+                        <td data-label="Time" className="table-cell text-xs text-slate-500">{formatDateTime(m.time)}</td>
                       </tr>
                     );
                   })}
@@ -522,7 +522,7 @@ function VitalFormModal({ onClose, onSubmit, patients }: { onClose: () => void; 
             {patients.map((p) => (<option key={p.id} value={p.id}>{p.name} {p.ipd_number ? `(${p.ipd_number})` : `(${p.opd_number || ''})`}{p.current_ward_name ? ` · ${p.current_ward_name}` : ''}</option>))}
           </select>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="form-grid">
           <div>
             <label className="label">Temperature (°C)</label>
             <input type="number" step="0.1" className="input" value={form.temperature} onChange={(e) => setForm({ ...form, temperature: e.target.value })} />
@@ -575,7 +575,7 @@ function NoteFormModal({ onClose, onSubmit, patients, nurses }: { onClose: () =>
   return (
     <Modal isOpen={true} onClose={onClose} title="Add Nursing Note" size="md">
       <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="form-grid">
           <div>
             <label className="label">Patient *</label>
             <select className="input" required value={form.patient_id} onChange={(e) => setForm({ ...form, patient_id: e.target.value })}>
@@ -626,7 +626,7 @@ function MedFormModal({ onClose, onSubmit, patients, nurses }: { onClose: () => 
   return (
     <Modal isOpen={true} onClose={onClose} title="Administer Medication" size="md">
       <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="form-grid">
           <div>
             <label className="label">Patient *</label>
             <select className="input" required value={form.patient_id} onChange={(e) => setForm({ ...form, patient_id: e.target.value })}>

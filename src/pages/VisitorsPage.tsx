@@ -87,7 +87,7 @@ export function VisitorsPage() {
 
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full responsive-table">
             <thead>
               <tr className="border-b border-slate-100">
                 <th className="table-header">Visitor</th>
@@ -104,20 +104,20 @@ export function VisitorsPage() {
             <tbody className="divide-y divide-slate-50">
               {filtered.map((v) => (
                 <tr key={v.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="table-cell">
+                  <td data-label="Visitor" className="table-cell">
                     <div className="flex items-center gap-2">
                       <Avatar name={v.visitor_name} size="sm" />
                       <span className="font-medium text-slate-700">{v.visitor_name}</span>
                     </div>
                   </td>
-                  <td className="table-cell text-slate-600">{v.patient_name || '-'}</td>
-                  <td className="table-cell">{v.relationship || '-'}</td>
-                  <td className="table-cell text-sm">{v.phone || '-'}</td>
-                  <td className="table-cell text-sm">{v.id_proof || '-'}</td>
-                  <td className="table-cell text-xs text-slate-500">{formatDateTime(v.check_in)}</td>
-                  <td className="table-cell text-xs text-slate-500">{v.check_out ? formatDateTime(v.check_out) : '-'}</td>
-                  <td className="table-cell"><StatusBadge status={v.status} /></td>
-                  <td className="table-cell">
+                  <td data-label="Visiting Patient" className="table-cell text-slate-600">{v.patient_name || '-'}</td>
+                  <td data-label="Relationship" className="table-cell">{v.relationship || '-'}</td>
+                  <td data-label="Phone" className="table-cell text-sm">{v.phone || '-'}</td>
+                  <td data-label="ID Proof" className="table-cell text-sm">{v.id_proof || '-'}</td>
+                  <td data-label="Check In" className="table-cell text-xs text-slate-500">{formatDateTime(v.check_in)}</td>
+                  <td data-label="Check Out" className="table-cell text-xs text-slate-500">{v.check_out ? formatDateTime(v.check_out) : '-'}</td>
+                  <td data-label="Status" className="table-cell"><StatusBadge status={v.status} /></td>
+                  <td data-label="Action" className="table-cell">
                     {v.status === 'Checked In' && (
                       <button
                         onClick={() => checkOutVisitor(v.id)}
@@ -161,7 +161,7 @@ function VisitorFormModal({ onClose, onSubmit, patients }: { onClose: () => void
             ))}
           </select>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="form-grid">
           <div>
             <label className="label">Relationship</label>
             <select className="input" value={form.relationship} onChange={(e) => setForm({ ...form, relationship: e.target.value })}>
@@ -173,7 +173,7 @@ function VisitorFormModal({ onClose, onSubmit, patients }: { onClose: () => void
             <input className="input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="form-grid">
           <div>
             <label className="label">ID Proof</label>
             <select className="input" value={form.id_proof} onChange={(e) => setForm({ ...form, id_proof: e.target.value })}>

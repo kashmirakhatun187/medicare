@@ -132,7 +132,7 @@ export function AdmissionsPage() {
 
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full responsive-table">
             <thead>
               <tr className="border-b border-slate-100">
                 <th className="table-header">Patient</th>
@@ -149,27 +149,27 @@ export function AdmissionsPage() {
             <tbody className="divide-y divide-slate-50">
               {filtered.map((a) => (
                 <tr key={a.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="table-cell">
+                  <td data-label="Patient" className="table-cell">
                     <div className="flex items-center gap-2">
                       <Avatar name={a.patient_name || ''} size="sm" />
                       <span className="font-medium text-slate-700">{a.patient_name}</span>
                     </div>
                   </td>
-                  <td className="table-cell font-mono text-xs">{a.mrn}</td>
-                  <td className="table-cell">
+                  <td data-label="MRN" className="table-cell font-mono text-xs">{a.mrn}</td>
+                  <td data-label="Bed / Ward" className="table-cell">
                     <div>
                       <p className="font-medium text-slate-700">{a.bed_number}</p>
                       <p className="text-xs text-slate-400">{a.ward_name}</p>
                     </div>
                   </td>
-                  <td className="table-cell">{a.doctor_name || '-'}</td>
-                  <td className="table-cell text-xs text-slate-500">{formatDate(a.admission_date)} {formatTime(a.admission_time)}</td>
-                  <td className="table-cell">
+                  <td data-label="Doctor" className="table-cell">{a.doctor_name || '-'}</td>
+                  <td data-label="Admitted" className="table-cell text-xs text-slate-500">{formatDate(a.admission_date)} {formatTime(a.admission_time)}</td>
+                  <td data-label="Days" className="table-cell">
                     <span className="badge-blue">{daysBetween(a.admission_date, a.status === 'Discharged' && a.discharge_date ? a.discharge_date : new Date().toISOString().split('T')[0])}d</span>
                   </td>
-                  <td className="table-cell font-medium">{formatCurrency(a.advance_amount)}</td>
-                  <td className="table-cell"><StatusBadge status={a.status} /></td>
-                  <td className="table-cell">
+                  <td data-label="Advance" className="table-cell font-medium">{formatCurrency(a.advance_amount)}</td>
+                  <td data-label="Status" className="table-cell"><StatusBadge status={a.status} /></td>
+                  <td data-label="Action" className="table-cell">
                     {a.status === 'Admitted' && (
                       <button
                         onClick={() => dischargeAdmission(a.id, a.bed_id)}
@@ -267,7 +267,7 @@ function AdmissionFormModal({
             ))}
           </select>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="form-grid">
           <div>
             <label className="label">Admission Date *</label>
             <input type="date" className="input" required value={form.admission_date} onChange={(e) => setForm({ ...form, admission_date: e.target.value })} />

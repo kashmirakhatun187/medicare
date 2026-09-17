@@ -131,6 +131,57 @@
 }
 
 
+/* Mobile table card layout */
+@media (max-width: 639px) {
+  .responsive-table thead { display: none; }
+  .responsive-table tbody { display: flex; flex-direction: column; gap: 12px; }
+  .responsive-table tr {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: white;
+  }
+  .responsive-table tr:hover { background: #f8fafc; }
+  .responsive-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 6px 0;
+    border: none;
+  }
+  .responsive-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #94a3b8;
+    letter-spacing: 0.05em;
+  }
+  .responsive-table td[data-label="Patient"]::before,
+  .responsive-table td[data-label="Employee"]::before,
+  .responsive-table td[data-label="Visitor"]::before { display: none; }
+  .responsive-table td[data-label="Patient"],
+  .responsive-table td[data-label="Employee"],
+  .responsive-table td[data-label="Visitor"] { width: 100%; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9; margin-bottom: 4px; }
+}
+
+/* Responsive form grid: single column on mobile, two on sm+ */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+@media (min-width: 640px) {
+  .form-grid { grid-template-columns: repeat(2, 1fr); }
+}
+.form-grid .col-span-2 { grid-column: span 1; }
+@media (min-width: 640px) {
+  .form-grid .col-span-2 { grid-column: span 2; }
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

@@ -198,7 +198,7 @@ export function BillingPage() {
 
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full responsive-table">
             <thead>
               <tr className="border-b border-slate-100">
                 <th className="table-header">Bill No.</th>
@@ -214,21 +214,21 @@ export function BillingPage() {
             <tbody className="divide-y divide-slate-50">
               {filtered.map((b) => (
                 <tr key={b.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="table-cell font-mono text-xs">{b.bill_number}</td>
-                  <td className="table-cell font-medium text-slate-700">{b.patient_name}</td>
-                  <td className="table-cell">
+                  <td data-label="Bill No." className="table-cell font-mono text-xs">{b.bill_number}</td>
+                  <td data-label="Patient" className="table-cell font-medium text-slate-700">{b.patient_name}</td>
+                  <td data-label="Type" className="table-cell">
                     <span className={`badge ${b.bill_type === 'IPD' ? 'badge-red' : b.bill_type === 'Pharmacy' ? 'badge-teal' : 'badge-blue'}`}>{b.bill_type}</span>
                   </td>
-                  <td className="table-cell text-xs text-slate-500">{(b.items || []).length} items</td>
-                  <td className="table-cell font-semibold">{formatCurrency(b.total)}</td>
-                  <td className="table-cell">
+                  <td data-label="Items" className="table-cell text-xs text-slate-500">{(b.items || []).length} items</td>
+                  <td data-label="Total" className="table-cell font-semibold">{formatCurrency(b.total)}</td>
+                  <td data-label="Payment" className="table-cell">
                     <div>
                       <StatusBadge status={b.payment_status} />
                       <p className="text-xs text-slate-400 mt-0.5">{b.payment_method}</p>
                     </div>
                   </td>
-                  <td className="table-cell text-xs text-slate-500">{formatDate(b.created_at)}</td>
-                  <td className="table-cell">
+                  <td data-label="Date" className="table-cell text-xs text-slate-500">{formatDate(b.created_at)}</td>
+                  <td data-label="Actions" className="table-cell">
                     <div className="flex items-center gap-1">
                       <button onClick={() => generatePDF(b, 'download')} className="p-1.5 text-slate-500 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors" title="Download PDF">
                         <Download size={15} />
@@ -284,7 +284,7 @@ function BillFormModal({ onClose, onSubmit, patients }: { onClose: () => void; o
   return (
     <Modal isOpen={true} onClose={onClose} title="Create Bill" size="lg">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="form-grid">
           <div>
             <label className="label">Patient *</label>
             <select className="input" required value={form.patient_id} onChange={(e) => setForm({ ...form, patient_id: e.target.value })}>
@@ -335,7 +335,7 @@ function BillFormModal({ onClose, onSubmit, patients }: { onClose: () => void; o
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="form-grid">
           <div>
             <label className="label">Discount (₹)</label>
             <input type="number" className="input" value={form.discount} onChange={(e) => setForm({ ...form, discount: e.target.value })} />

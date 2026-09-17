@@ -150,7 +150,7 @@ export function LabPage() {
           </div>
           <div className="card overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full responsive-table">
                 <thead>
                   <tr className="border-b border-slate-100">
                     <th className="table-header">Patient</th>
@@ -164,10 +164,10 @@ export function LabPage() {
                 <tbody className="divide-y divide-slate-50">
                   {filteredOrders.map((o) => (
                     <tr key={o.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="table-cell font-medium text-slate-700">{o.patient_name}</td>
-                      <td className="table-cell">{o.test_name}</td>
-                      <td className="table-cell">{o.test_category || '-'}</td>
-                      <td className="table-cell">
+                      <td data-label="Patient" className="table-cell font-medium text-slate-700">{o.patient_name}</td>
+                      <td data-label="Test" className="table-cell">{o.test_name}</td>
+                      <td data-label="Category" className="table-cell">{o.test_category || '-'}</td>
+                      <td data-label="Result" className="table-cell">
                         {o.result ? (
                           <div>
                             <span className={`font-medium ${o.is_abnormal ? 'text-rose-600' : 'text-slate-700'}`}>
@@ -180,8 +180,8 @@ export function LabPage() {
                           <span className="text-slate-400">Pending</span>
                         )}
                       </td>
-                      <td className="table-cell"><StatusBadge status={o.status} /></td>
-                      <td className="table-cell text-xs text-slate-500">{formatDateTime(o.ordered_at)}</td>
+                      <td data-label="Status" className="table-cell"><StatusBadge status={o.status} /></td>
+                      <td data-label="Ordered" className="table-cell text-xs text-slate-500">{formatDateTime(o.ordered_at)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -315,7 +315,7 @@ function TestFormModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (
           <label className="label">Test Name *</label>
           <input className="input" required value={form.test_name} onChange={(e) => setForm({ ...form, test_name: e.target.value })} />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="form-grid">
           <div>
             <label className="label">Category</label>
             <select className="input" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>

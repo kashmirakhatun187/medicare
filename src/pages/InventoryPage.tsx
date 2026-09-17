@@ -129,7 +129,7 @@ export function InventoryPage() {
           </div>
           <div className="card overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full responsive-table">
                 <thead>
                   <tr className="border-b border-slate-100">
                     <th className="table-header">Item</th>
@@ -147,24 +147,24 @@ export function InventoryPage() {
                     const isLow = i.quantity <= i.reorder_level;
                     return (
                       <tr key={i.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="table-cell">
+                        <td data-label="Item" className="table-cell">
                           <div>
                             <p className="font-medium text-slate-700">{i.name}</p>
                             {i.asset_tag && <p className="text-xs text-slate-400 font-mono">{i.asset_tag}</p>}
                           </div>
                         </td>
-                        <td className="table-cell">{i.category}</td>
-                        <td className="table-cell">
+                        <td data-label="Category" className="table-cell">{i.category}</td>
+                        <td data-label="Type" className="table-cell">
                           <span className={`badge ${i.item_type === 'Asset' ? 'badge-blue' : 'badge-gray'}`}>{i.item_type}</span>
                         </td>
-                        <td className="table-cell">
+                        <td data-label="Qty" className="table-cell">
                           <span className={`font-semibold ${isLow ? 'text-rose-600' : 'text-slate-700'}`}>{i.quantity} {i.unit}</span>
                           {isLow && <p className="text-xs text-rose-500">Below {i.reorder_level}</p>}
                         </td>
-                        <td className="table-cell font-medium">{formatCurrency(i.unit_price)}</td>
-                        <td className="table-cell text-sm">{i.vendor || '-'}</td>
-                        <td className="table-cell text-sm">{i.location || '-'}</td>
-                        <td className="table-cell">
+                        <td data-label="Unit Price" className="table-cell font-medium">{formatCurrency(i.unit_price)}</td>
+                        <td data-label="Vendor" className="table-cell text-sm">{i.vendor || '-'}</td>
+                        <td data-label="Location" className="table-cell text-sm">{i.location || '-'}</td>
+                        <td data-label="Status" className="table-cell">
                           {isLow ? <span className="badge-red">Low Stock</span> : <span className="badge-green">In Stock</span>}
                         </td>
                       </tr>
@@ -181,7 +181,7 @@ export function InventoryPage() {
       {tab === 'purchase' && (
         <div className="card overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full responsive-table">
               <thead>
                 <tr className="border-b border-slate-100">
                   <th className="table-header">PO Number</th>
@@ -198,15 +198,15 @@ export function InventoryPage() {
               <tbody className="divide-y divide-slate-50">
                 {orders.map((o) => (
                   <tr key={o.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="table-cell font-mono text-xs">{o.po_number}</td>
-                    <td className="table-cell font-medium text-slate-700">{o.vendor_name}</td>
-                    <td className="table-cell text-sm">{o.item_description}</td>
-                    <td className="table-cell">{o.quantity}</td>
-                    <td className="table-cell font-medium">{formatCurrency(o.total_amount)}</td>
-                    <td className="table-cell text-xs text-slate-500">{formatDate(o.order_date)}</td>
-                    <td className="table-cell text-xs text-slate-500">{formatDate(o.expected_date)}</td>
-                    <td className="table-cell"><StatusBadge status={o.status} /></td>
-                    <td className="table-cell">
+                    <td data-label="PO Number" className="table-cell font-mono text-xs">{o.po_number}</td>
+                    <td data-label="Vendor" className="table-cell font-medium text-slate-700">{o.vendor_name}</td>
+                    <td data-label="Item" className="table-cell text-sm">{o.item_description}</td>
+                    <td data-label="Qty" className="table-cell">{o.quantity}</td>
+                    <td data-label="Total" className="table-cell font-medium">{formatCurrency(o.total_amount)}</td>
+                    <td data-label="Order Date" className="table-cell text-xs text-slate-500">{formatDate(o.order_date)}</td>
+                    <td data-label="Expected" className="table-cell text-xs text-slate-500">{formatDate(o.expected_date)}</td>
+                    <td data-label="Status" className="table-cell"><StatusBadge status={o.status} /></td>
+                    <td data-label="Action" className="table-cell">
                       {o.status === 'Pending' && (
                         <button
                           onClick={() => updatePOStatus(o.id, 'Received')}
@@ -240,7 +240,7 @@ function ItemFormModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (
   return (
     <Modal isOpen={true} onClose={onClose} title="Add Inventory Item" size="md">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="form-grid">
           <div>
             <label className="label">Name *</label>
             <input className="input" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
@@ -315,7 +315,7 @@ function POFormModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (f:
           <label className="label">Item Description *</label>
           <input className="input" required value={form.item_description} onChange={(e) => setForm({ ...form, item_description: e.target.value })} />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="form-grid">
           <div>
             <label className="label">Quantity</label>
             <input type="number" className="input" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />

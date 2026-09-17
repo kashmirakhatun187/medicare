@@ -109,7 +109,7 @@ export function SettingsPage() {
             </div>
             <h3 className="font-semibold text-slate-800">System Statistics</h3>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="form-grid">
             <div className="bg-slate-50 rounded-xl p-4">
               <p className="text-2xl font-bold text-slate-800">{stats.users}</p>
               <p className="text-xs text-slate-500">Registered Users</p>

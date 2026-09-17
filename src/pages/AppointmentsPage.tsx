@@ -190,7 +190,7 @@ function AppointmentFormModal({
             ))}
           </select>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="form-grid">
           <div>
             <label className="label">Date *</label>
             <input type="date" className="input" required value={form.appointment_date} onChange={(e) => setForm({ ...form, appointment_date: e.target.value })} />
