@@ -308,46 +308,92 @@ function TestFormModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (
     onSubmit(form);
   };
 
+  const categories = ['Pathology', 'Biochemistry', 'Hematology', 'Microbiology', 'Radiology', 'Cardiology'];
+  const departments = ['Pathology', 'Radiology', 'Cardiology'];
+
   return (
-    <Modal isOpen={true} onClose={onClose} title="Add Lab Test" size="sm">
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <Modal isOpen={true} onClose={onClose} title="Add Lab Test" size="md">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="bg-gradient-to-r from-brand-50 to-cyan-50 rounded-xl p-3 flex items-center gap-3 border border-brand-100/50">
+          <div className="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center flex-shrink-0">
+            <FlaskConical className="text-white" size={20} />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-slate-700">New Diagnostic Test</p>
+            <p className="text-xs text-slate-500">Add a test to the lab catalog with pricing and reference ranges</p>
+          </div>
+        </div>
+
         <div>
           <label className="label">Test Name *</label>
-          <input className="input" required value={form.test_name} onChange={(e) => setForm({ ...form, test_name: e.target.value })} />
+          <input className="input" required placeholder="e.g. Complete Blood Count (CBC)" value={form.test_name} onChange={(e) => setForm({ ...form, test_name: e.target.value })} />
         </div>
+
         <div className="form-grid">
           <div>
             <label className="label">Category</label>
-            <select className="input" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
-              {['Pathology', 'Biochemistry', 'Hematology', 'Microbiology', 'Radiology', 'Cardiology'].map((c) => (
-                <option key={c}>{c}</option>
+            <div className="grid grid-cols-2 gap-1.5">
+              {categories.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setForm({ ...form, category: c })}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    form.category === c
+                      ? 'bg-brand-600 text-white shadow-sm'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {c}
+                </button>
               ))}
-            </select>
+            </div>
           </div>
           <div>
             <label className="label">Department</label>
-            <select className="input" value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })}>
-              {['Pathology', 'Radiology', 'Cardiology'].map((d) => (
-                <option key={d}>{d}</option>
+            <div className="grid grid-cols-1 gap-1.5">
+              {departments.map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => setForm({ ...form, department: d })}
+                  className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    form.department === d
+                      ? 'bg-cyan-600 text-white shadow-sm'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {d}
+                </button>
               ))}
-            </select>
+            </div>
           </div>
         </div>
-        <div>
-          <label className="label">Sample Type</label>
-          <input className="input" value={form.sample_type} onChange={(e) => setForm({ ...form, sample_type: e.target.value })} />
+
+        <div className="form-grid">
+          <div>
+            <label className="label">Sample Type</label>
+            <input className="input" placeholder="e.g. Blood, Urine" value={form.sample_type} onChange={(e) => setForm({ ...form, sample_type: e.target.value })} />
+          </div>
+          <div>
+            <label className="label">Normal Range</label>
+            <input className="input" placeholder="e.g. 4.0 - 11.0" value={form.normal_range} onChange={(e) => setForm({ ...form, normal_range: e.target.value })} />
+          </div>
         </div>
-        <div>
-          <label className="label">Normal Range</label>
-          <input className="input" value={form.normal_range} onChange={(e) => setForm({ ...form, normal_range: e.target.value })} />
-        </div>
+
         <div>
           <label className="label">Price (₹)</label>
-          <input type="number" className="input" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">₹</span>
+            <input type="number" className="input pl-8" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+          </div>
         </div>
-        <div className="flex justify-end gap-3 pt-4">
+
+        <div className="flex justify-end gap-3 pt-2 border-t border-slate-100">
           <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
-          <button type="submit" className="btn-primary">Add Test</button>
+          <button type="submit" className="btn-primary">
+            <FlaskConical size={16} /> Add Test
+          </button>
         </div>
       </form>
     </Modal>

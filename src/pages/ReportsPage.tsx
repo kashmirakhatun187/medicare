@@ -4,12 +4,15 @@ import type { Patient } from '@/lib/types';
 import { PatientSearch } from '@/components/PatientSearch';
 import { PageHeader, LoadingSpinner, StatCard, EmptyState, Avatar, StatusBadge } from '@/components/ui';
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils';
-import { FileBarChart, TrendingUp, Users, BedDouble, Pill, FlaskConical, CreditCard, Activity, X, FileText, Calendar, Stethoscope, HeartPulse } from 'lucide-react';
+import { FileBarChart, TrendingUp, Users, BedDouble, Pill, FlaskConical, CreditCard, Activity, X, FileText, Calendar, Stethoscope, HeartPulse, LayoutDashboard, User, DollarSign, TestTube, BarChart3, ArrowLeft } from 'lucide-react';
+
+type ReportView = 'overview' | 'patient' | 'financial' | 'lab' | 'occupancy';
 
 export function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [patientReport, setPatientReport] = useState<any>(null);
+  const [view, setView] = useState<ReportView>('overview');
   const [data, setData] = useState({
     totalPatients: 0,
     opd: 0,
@@ -37,6 +40,7 @@ export function ReportsPage() {
   useEffect(() => {
     if (selectedPatient) {
       loadPatientReport(selectedPatient.id);
+      setView('patient');
     } else {
       setPatientReport(null);
     }
@@ -143,17 +147,30 @@ export function ReportsPage() {
 
   if (loading) return <LoadingSpinner />;
 
+  const reportTabs = [
+    { id: 'overview' as ReportView, label: 'Overview Dashboard', icon: LayoutDashboard, color: 'brand' },
+    { id: 'patient' as ReportView, label: 'Patient Report', icon: User, color: 'blue' },
+    { id: 'financial' as ReportView, label: 'Financial Report', icon: DollarSign, color: 'emerald' },
+    { id: 'lab' as ReportView, label: 'Lab Analytics', icon: TestTube, color: 'amber' },
+    { id: 'occupancy' as ReportView, label: 'Bed Occupancy', icon: BedDouble, color: 'cyan' },
+  ];
+
   // Patient-specific report view
-  if (selectedPatient && patientReport) {
+  if (view === 'patient' && selectedPatient && patientReport) {
     const p = selectedPatient;
     const r = patientReport;
     return (
       <div className="animate-fade-in">
-        <PageHeader title="Patient Report" subtitle="Individual patient analytics and history" />
+        <div className="flex items-center gap-3 mb-6">
+          <button onClick={() => { setView('overview'); setSelectedPatient(null); }} className="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors">
+            <ArrowLeft size={18} />
+          </button>
+          <PageHeader title="Patient Report" subtitle="Individual patient analytics and history" />
+        </div>
 
         {/* Patient header card */}
         <div className="card p-6 mb-6">
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <Avatar name={p.name} size="lg" />
               <div>
@@ -168,7 +185,7 @@ export function ReportsPage() {
                 </div>
               </div>
             </div>
-            <button onClick={() => setSelectedPatient(null)} className="btn-secondary text-sm">
+            <button onClick={() => { setView('overview'); setSelectedPatient(null); }} className="btn-secondary text-sm whitespace-nowrap">
               <X size={16} /> Clear Filter
             </button>
           </div>
@@ -319,111 +336,327 @@ export function ReportsPage() {
   const maxDeptCount = Math.max(...data.patientsByDept.map((d) => d.count), 1);
   const maxBillAmount = Math.max(...data.billsByDay.map((d) => d.amount), 1);
 
+  const colorMap: Record<string, { bg: string; text: string; iconBg: string }> = {
+    brand: { bg: 'bg-brand-50', text: 'text-brand-700', iconBg: 'bg-brand-600' },
+    blue: { bg: 'bg-blue-50', text: 'text-blue-700', iconBg: 'bg-blue-600' },
+    emerald: { bg: 'bg-emerald-50', text: 'text-emerald-700', iconBg: 'bg-emerald-600' },
+    amber: { bg: 'bg-amber-50', text: 'text-amber-700', iconBg: 'bg-amber-600' },
+    cyan: { bg: 'bg-cyan-50', text: 'text-cyan-700', iconBg: 'bg-cyan-600' },
+  };
+
   return (
     <div className="animate-fade-in">
       <PageHeader title="Reports & Analytics" subtitle="MIS reports, financial dashboard, and performance metrics" />
 
-      {/* Patient filter */}
-      <div className="card p-4 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="flex-1">
-            <PatientSearch onSelect={(p) => setSelectedPatient(p)} placeholder="Search a patient to view their individual report..." />
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Side filter panel */}
+        <div className="lg:w-64 flex-shrink-0">
+          <div className="card p-4 lg:sticky lg:top-20">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 px-2">Report Types</h3>
+            <div className="space-y-1.5">
+              {reportTabs.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = view === tab.id;
+                const c = colorMap[tab.color];
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => {
+                      setView(tab.id);
+                      if (tab.id !== 'patient') setSelectedPatient(null);
+                    }}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                      isActive
+                        ? `${c.bg} ${c.text} shadow-sm`
+                        : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                      isActive ? `${c.iconBg} text-white` : 'bg-slate-100 text-slate-500'
+                    }`}>
+                      <Icon size={16} />
+                    </div>
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Patient search for patient report */}
+            <div className="mt-4 pt-4 border-t border-slate-100">
+              <p className="text-xs text-slate-400 mb-2 px-2">Search for patient-specific report</p>
+              <PatientSearch onSelect={(p) => setSelectedPatient(p)} placeholder="Search patient..." />
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard label="Total Patients" value={data.totalPatients} icon={<Users size={22} />} color="brand" trend={`${data.opd} OPD · ${data.ipd} IPD`} />
-        <StatCard label="Bed Occupancy" value={`${occupancyRate}%`} icon={<BedDouble size={22} />} color="blue" trend={`${data.occupiedBeds}/${data.totalBeds} beds`} />
-        <StatCard label="Total Revenue" value={formatCurrency(data.totalRevenue)} icon={<TrendingUp size={22} />} color="emerald" trend={`${data.totalBills} bills`} />
-        <StatCard label="Lab Completion" value={`${data.completedLabs}/${data.totalLabOrders}`} icon={<FlaskConical size={22} />} color="amber" />
-      </div>
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard label="Doctors" value={data.totalDoctors} icon={<Activity size={22} />} color="cyan" />
-        <StatCard label="Nurses" value={data.totalNurses} icon={<Activity size={22} />} color="rose" />
-        <StatCard label="Medicines" value={data.totalMedicines} icon={<Pill size={22} />} color="brand" trend={`${data.lowStock} low stock`} />
-        <StatCard label="Surgeries" value={data.totalSurgeries} icon={<FileBarChart size={22} />} color="amber" />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="card p-6">
-          <h3 className="font-semibold text-slate-800 mb-4">Revenue by Bill Type</h3>
-          {data.revenueByType.length === 0 ? (
-            <EmptyState message="No revenue data" />
-          ) : (
-            <div className="space-y-3">
-              {data.revenueByType.map((r) => (
-                <div key={r.type}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm text-slate-600">{r.type}</span>
-                    <span className="text-sm font-semibold text-slate-700">{formatCurrency(r.amount)}</span>
-                  </div>
-                  <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-brand-500 to-brand-400 rounded-full transition-all duration-500" style={{ width: `${(r.amount / maxRevType) * 100}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="card p-6">
-          <h3 className="font-semibold text-slate-800 mb-4">Patients by Department</h3>
-          {data.patientsByDept.length === 0 ? (
-            <EmptyState message="No data" />
-          ) : (
-            <div className="space-y-3">
-              {data.patientsByDept.map((d) => (
-                <div key={d.name}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm text-slate-600">{d.name}</span>
-                    <span className="text-sm font-semibold text-slate-700">{d.count}</span>
-                  </div>
-                  <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-500" style={{ width: `${(d.count / maxDeptCount) * 100}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="card p-6">
-        <h3 className="font-semibold text-slate-800 mb-4">Daily Billing Trend</h3>
-        <div className="flex items-end justify-between gap-3 h-48">
-          {data.billsByDay.map((d) => (
-            <div key={d.day} className="flex-1 flex flex-col items-center gap-2">
-              <span className="text-xs font-medium text-slate-600">{formatCurrency(d.amount)}</span>
-              <div className="w-full bg-slate-100 rounded-t-lg flex items-end justify-center" style={{ height: '100%' }}>
-                <div className="w-full bg-gradient-to-t from-emerald-500 to-emerald-400 rounded-t-lg transition-all duration-500" style={{ height: `${(d.amount / maxBillAmount) * 100}%` }} />
+        {/* Main content */}
+        <div className="flex-1 min-w-0">
+          {/* Overview Dashboard */}
+          {view === 'overview' && (
+            <>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <StatCard label="Total Patients" value={data.totalPatients} icon={<Users size={22} />} color="brand" trend={`${data.opd} OPD · ${data.ipd} IPD`} />
+                <StatCard label="Bed Occupancy" value={`${occupancyRate}%`} icon={<BedDouble size={22} />} color="blue" trend={`${data.occupiedBeds}/${data.totalBeds} beds`} />
+                <StatCard label="Total Revenue" value={formatCurrency(data.totalRevenue)} icon={<TrendingUp size={22} />} color="emerald" trend={`${data.totalBills} bills`} />
+                <StatCard label="Lab Completion" value={`${data.completedLabs}/${data.totalLabOrders}`} icon={<FlaskConical size={22} />} color="amber" />
               </div>
-              <span className="text-xs text-slate-500 font-medium">{d.day}</span>
-              <span className="text-xs text-slate-400">{d.count} bills</span>
-            </div>
-          ))}
-        </div>
-      </div>
 
-      <div className="card p-6 mt-6">
-        <h3 className="font-semibold text-slate-800 mb-4">Financial Summary</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-slate-50 rounded-lg p-4">
-            <div className="flex items-center gap-2 text-slate-400 text-xs mb-1"><CreditCard size={14} /> Total Bills</div>
-            <p className="text-xl font-bold text-slate-800">{data.totalBills}</p>
-          </div>
-          <div className="bg-slate-50 rounded-lg p-4">
-            <div className="flex items-center gap-2 text-slate-400 text-xs mb-1"><TrendingUp size={14} /> Avg Bill Value</div>
-            <p className="text-xl font-bold text-slate-800">{formatCurrency(data.totalBills > 0 ? data.totalRevenue / data.totalBills : 0)}</p>
-          </div>
-          <div className="bg-slate-50 rounded-lg p-4">
-            <div className="flex items-center gap-2 text-slate-400 text-xs mb-1"><Users size={14} /> Total Patients</div>
-            <p className="text-xl font-bold text-slate-800">{data.totalPatients}</p>
-          </div>
-          <div className="bg-slate-50 rounded-lg p-4">
-            <div className="flex items-center gap-2 text-slate-400 text-xs mb-1"><BedDouble size={14} /> Occupancy Rate</div>
-            <p className="text-xl font-bold text-slate-800">{occupancyRate}%</p>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <StatCard label="Doctors" value={data.totalDoctors} icon={<Activity size={22} />} color="cyan" />
+                <StatCard label="Nurses" value={data.totalNurses} icon={<Activity size={22} />} color="rose" />
+                <StatCard label="Medicines" value={data.totalMedicines} icon={<Pill size={22} />} color="brand" trend={`${data.lowStock} low stock`} />
+                <StatCard label="Surgeries" value={data.totalSurgeries} icon={<FileBarChart size={22} />} color="amber" />
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div className="card p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center">
+                      <DollarSign size={16} className="text-brand-600" />
+                    </div>
+                    <h3 className="font-semibold text-slate-800">Revenue by Bill Type</h3>
+                  </div>
+                  {data.revenueByType.length === 0 ? (
+                    <EmptyState message="No revenue data" />
+                  ) : (
+                    <div className="space-y-3">
+                      {data.revenueByType.map((r) => (
+                        <div key={r.type}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-sm text-slate-600">{r.type}</span>
+                            <span className="text-sm font-semibold text-slate-700">{formatCurrency(r.amount)}</span>
+                          </div>
+                          <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-brand-500 to-brand-400 rounded-full transition-all duration-500" style={{ width: `${(r.amount / maxRevType) * 100}%` }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="card p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+                      <BarChart3 size={16} className="text-blue-600" />
+                    </div>
+                    <h3 className="font-semibold text-slate-800">Patients by Department</h3>
+                  </div>
+                  {data.patientsByDept.length === 0 ? (
+                    <EmptyState message="No data" />
+                  ) : (
+                    <div className="space-y-3">
+                      {data.patientsByDept.map((d) => (
+                        <div key={d.name}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-sm text-slate-600">{d.name}</span>
+                            <span className="text-sm font-semibold text-slate-700">{d.count}</span>
+                          </div>
+                          <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-500" style={{ width: `${(d.count / maxDeptCount) * 100}%` }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="card p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
+                    <TrendingUp size={16} className="text-emerald-600" />
+                  </div>
+                  <h3 className="font-semibold text-slate-800">Daily Billing Trend</h3>
+                </div>
+                <div className="flex items-end justify-between gap-2 sm:gap-3 h-48">
+                  {data.billsByDay.map((d) => (
+                    <div key={d.day} className="flex-1 flex flex-col items-center gap-2">
+                      <span className="text-xs font-medium text-slate-600 hidden sm:block">{formatCurrency(d.amount)}</span>
+                      <div className="w-full bg-slate-100 rounded-t-lg flex items-end justify-center" style={{ height: '100%' }}>
+                        <div className="w-full bg-gradient-to-t from-emerald-500 to-emerald-400 rounded-t-lg transition-all duration-500" style={{ height: `${(d.amount / maxBillAmount) * 100}%` }} />
+                      </div>
+                      <span className="text-xs text-slate-500 font-medium">{d.day}</span>
+                      <span className="text-xs text-slate-400 hidden sm:block">{d.count} bills</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Financial Report */}
+          {view === 'financial' && (
+            <>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <StatCard label="Total Revenue" value={formatCurrency(data.totalRevenue)} icon={<DollarSign size={22} />} color="emerald" />
+                <StatCard label="Total Bills" value={data.totalBills} icon={<CreditCard size={22} />} color="brand" />
+                <StatCard label="Avg Bill Value" value={formatCurrency(data.totalBills > 0 ? data.totalRevenue / data.totalBills : 0)} icon={<TrendingUp size={22} />} color="cyan" />
+                <StatCard label="Occupancy Rate" value={`${occupancyRate}%`} icon={<BedDouble size={22} />} color="amber" />
+              </div>
+
+              <div className="card p-6 mb-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center">
+                    <DollarSign size={16} className="text-brand-600" />
+                  </div>
+                  <h3 className="font-semibold text-slate-800">Revenue by Bill Type</h3>
+                </div>
+                {data.revenueByType.length === 0 ? (
+                  <EmptyState message="No revenue data" />
+                ) : (
+                  <div className="space-y-4">
+                    {data.revenueByType.map((r) => (
+                      <div key={r.type}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium text-slate-600">{r.type}</span>
+                          <span className="text-sm font-bold text-slate-700">{formatCurrency(r.amount)}</span>
+                        </div>
+                        <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-gradient-to-r from-brand-500 to-cyan-400 rounded-full transition-all duration-500" style={{ width: `${(r.amount / maxRevType) * 100}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="card p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
+                    <TrendingUp size={16} className="text-emerald-600" />
+                  </div>
+                  <h3 className="font-semibold text-slate-800">Daily Billing Trend</h3>
+                </div>
+                <div className="flex items-end justify-between gap-2 sm:gap-3 h-56">
+                  {data.billsByDay.map((d) => (
+                    <div key={d.day} className="flex-1 flex flex-col items-center gap-2">
+                      <span className="text-xs font-medium text-slate-600 hidden sm:block">{formatCurrency(d.amount)}</span>
+                      <div className="w-full bg-slate-100 rounded-t-lg flex items-end justify-center" style={{ height: '100%' }}>
+                        <div className="w-full bg-gradient-to-t from-emerald-500 to-emerald-400 rounded-t-lg transition-all duration-500" style={{ height: `${(d.amount / maxBillAmount) * 100}%` }} />
+                      </div>
+                      <span className="text-xs text-slate-500 font-medium">{d.day}</span>
+                      <span className="text-xs text-slate-400 hidden sm:block">{d.count} bills</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Lab Analytics */}
+          {view === 'lab' && (
+            <>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <StatCard label="Total Lab Orders" value={data.totalLabOrders} icon={<FlaskConical size={22} />} color="amber" />
+                <StatCard label="Completed" value={data.completedLabs} icon={<TestTube size={22} />} color="emerald" />
+                <StatCard label="Pending" value={data.totalLabOrders - data.completedLabs} icon={<TestTube size={22} />} color="rose" />
+                <StatCard label="Completion Rate" value={`${data.totalLabOrders > 0 ? Math.round((data.completedLabs / data.totalLabOrders) * 100) : 0}%`} icon={<BarChart3 size={22} />} color="brand" />
+              </div>
+
+              <div className="card p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center">
+                    <FlaskConical size={16} className="text-amber-600" />
+                  </div>
+                  <h3 className="font-semibold text-slate-800">Lab Completion Progress</h3>
+                </div>
+                {data.totalLabOrders === 0 ? (
+                  <EmptyState message="No lab orders" />
+                ) : (
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium text-slate-600">Completed Tests</span>
+                        <span className="text-sm font-bold text-slate-700">{data.completedLabs} / {data.totalLabOrders}</span>
+                      </div>
+                      <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-500" style={{ width: `${data.totalLabOrders > 0 ? (data.completedLabs / data.totalLabOrders) * 100 : 0}%` }} />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium text-slate-600">Pending Tests</span>
+                        <span className="text-sm font-bold text-slate-700">{data.totalLabOrders - data.completedLabs} / {data.totalLabOrders}</span>
+                      </div>
+                      <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-rose-500 to-rose-400 rounded-full transition-all duration-500" style={{ width: `${data.totalLabOrders > 0 ? ((data.totalLabOrders - data.completedLabs) / data.totalLabOrders) * 100 : 0}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* Bed Occupancy */}
+          {view === 'occupancy' && (
+            <>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <StatCard label="Total Beds" value={data.totalBeds} icon={<BedDouble size={22} />} color="blue" />
+                <StatCard label="Occupied" value={data.occupiedBeds} icon={<BedDouble size={22} />} color="rose" />
+                <StatCard label="Available" value={data.totalBeds - data.occupiedBeds} icon={<BedDouble size={22} />} color="emerald" />
+                <StatCard label="Occupancy Rate" value={`${occupancyRate}%`} icon={<BarChart3 size={22} />} color="amber" />
+              </div>
+
+              <div className="card p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 bg-cyan-50 rounded-lg flex items-center justify-center">
+                    <BedDouble size={16} className="text-cyan-600" />
+                  </div>
+                  <h3 className="font-semibold text-slate-800">Bed Occupancy Breakdown</h3>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-slate-600">Occupied Beds</span>
+                      <span className="text-sm font-bold text-slate-700">{data.occupiedBeds} / {data.totalBeds}</span>
+                    </div>
+                    <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-rose-500 to-rose-400 rounded-full transition-all duration-500" style={{ width: `${occupancyRate}%` }} />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-slate-600">Available Beds</span>
+                      <span className="text-sm font-bold text-slate-700">{data.totalBeds - data.occupiedBeds} / {data.totalBeds}</span>
+                    </div>
+                    <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-500" style={{ width: `${data.totalBeds > 0 ? 100 - occupancyRate : 0}%` }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Financial Summary always at bottom */}
+          <div className="card p-6 mt-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
+                <FileBarChart size={16} className="text-slate-600" />
+              </div>
+              <h3 className="font-semibold text-slate-800">Financial Summary</h3>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-slate-50 rounded-lg p-4">
+                <div className="flex items-center gap-2 text-slate-400 text-xs mb-1"><CreditCard size={14} /> Total Bills</div>
+                <p className="text-xl font-bold text-slate-800">{data.totalBills}</p>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-4">
+                <div className="flex items-center gap-2 text-slate-400 text-xs mb-1"><TrendingUp size={14} /> Avg Bill Value</div>
+                <p className="text-xl font-bold text-slate-800">{formatCurrency(data.totalBills > 0 ? data.totalRevenue / data.totalBills : 0)}</p>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-4">
+                <div className="flex items-center gap-2 text-slate-400 text-xs mb-1"><Users size={14} /> Total Patients</div>
+                <p className="text-xl font-bold text-slate-800">{data.totalPatients}</p>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-4">
+                <div className="flex items-center gap-2 text-slate-400 text-xs mb-1"><BedDouble size={14} /> Occupancy Rate</div>
+                <p className="text-xl font-bold text-slate-800">{occupancyRate}%</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

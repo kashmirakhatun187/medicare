@@ -193,9 +193,9 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
             const Icon = module.icon;
             return (
               <button key={`${module.label}-${index}`} onClick={() => onNavigate?.(module.page)} className="module-tile group text-left" title={module.description}>
-                <span className={`module-icon bg-gradient-to-br ${module.tone}`}><Icon size={25} strokeWidth={1.8} /></span>
-                <span className="mt-3 line-clamp-2 text-center text-[11px] font-bold uppercase leading-4 tracking-wide text-slate-600 transition-colors group-hover:text-brand-700">{module.label}</span>
-                <span className={`mt-2 h-1 w-7 rounded-full bg-gradient-to-r ${module.tone} opacity-60 transition-all group-hover:w-12`} />
+                <span className={`module-icon bg-gradient-to-br ${module.tone}`}><Icon size={22} strokeWidth={1.8} /></span>
+                <span className="mt-2 line-clamp-2 text-center text-[11px] font-bold uppercase leading-3.5 tracking-wide text-slate-600 transition-colors group-hover:text-brand-700">{module.label}</span>
+                <span className={`mt-1.5 h-1 w-7 rounded-full bg-gradient-to-r ${module.tone} opacity-60 transition-all group-hover:w-11`} />
               </button>
             );
           })}
