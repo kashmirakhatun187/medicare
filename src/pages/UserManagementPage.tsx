@@ -183,7 +183,6 @@ function CreateStaffForm({ onClose, onCreated }: { onClose: () => void; onCreate
     setLoading(true);
 
     // Use the Supabase admin API to create the user (via service role key in .env)
-    const serviceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 
     try {
