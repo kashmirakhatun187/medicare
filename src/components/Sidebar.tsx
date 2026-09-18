@@ -87,14 +87,14 @@ interface SidebarProps {
   onShowWebsite?: () => void;
 }
 
-const GROUP_STYLES: Record<string, { color: string; iconBg: string }> = {
-  Overview: { color: 'text-brand-600', iconBg: 'bg-brand-50 text-brand-600' },
-  'Front Office': { color: 'text-blue-600', iconBg: 'bg-blue-50 text-blue-600' },
-  Clinical: { color: 'text-rose-600', iconBg: 'bg-rose-50 text-rose-600' },
-  Facility: { color: 'text-amber-600', iconBg: 'bg-amber-50 text-amber-600' },
-  Services: { color: 'text-emerald-600', iconBg: 'bg-emerald-50 text-emerald-600' },
-  Finance: { color: 'text-cyan-600', iconBg: 'bg-cyan-50 text-cyan-600' },
-  System: { color: 'text-slate-500', iconBg: 'bg-slate-100 text-slate-600' },
+const GROUP_STYLES: Record<string, { color: string; iconBg: string; activeGradient: string }> = {
+  Overview: { color: 'text-brand-600', iconBg: 'bg-brand-50 text-brand-600', activeGradient: 'from-brand-500 to-cyan-500' },
+  'Front Office': { color: 'text-blue-600', iconBg: 'bg-blue-50 text-blue-600', activeGradient: 'from-blue-500 to-indigo-500' },
+  Clinical: { color: 'text-rose-600', iconBg: 'bg-rose-50 text-rose-600', activeGradient: 'from-rose-500 to-pink-500' },
+  Facility: { color: 'text-amber-600', iconBg: 'bg-amber-50 text-amber-600', activeGradient: 'from-amber-500 to-orange-500' },
+  Services: { color: 'text-emerald-600', iconBg: 'bg-emerald-50 text-emerald-600', activeGradient: 'from-emerald-500 to-teal-500' },
+  Finance: { color: 'text-cyan-600', iconBg: 'bg-cyan-50 text-cyan-600', activeGradient: 'from-cyan-500 to-sky-500' },
+  System: { color: 'text-slate-500', iconBg: 'bg-slate-100 text-slate-600', activeGradient: 'from-slate-500 to-slate-600' },
 };
 
 export function Sidebar({ current, onNavigate, isOpen, onClose, role, onShowWebsite }: SidebarProps) {
@@ -107,29 +107,28 @@ export function Sidebar({ current, onNavigate, isOpen, onClose, role, onShowWebs
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-30 lg:hidden animate-fade-in" onClick={onClose} />
       )}
       <aside
-        className={`sidebar-premium fixed lg:sticky top-0 left-0 h-screen w-72 sm:w-64 z-40 transition-transform duration-300 ease-out flex flex-col shadow-2xl lg:shadow-none ${
+        className={`sidebar-premium fixed lg:sticky top-0 left-0 h-screen w-60 z-40 transition-transform duration-300 ease-out flex flex-col shadow-2xl lg:shadow-none ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
         {/* Logo header with gradient */}
-        <div className="relative flex items-center gap-3 px-5 py-5 border-b border-slate-100 bg-gradient-to-r from-brand-600 via-brand-700 to-cyan-700 overflow-hidden">
-          <div className="absolute -right-8 -top-8 w-24 h-24 bg-white/10 rounded-full blur-2xl" />
-          <div className="absolute -bottom-4 right-12 w-16 h-16 bg-cyan-300/20 rounded-full blur-xl" />
-          <div className="relative w-11 h-11 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg">
-            <Building2 className="text-white" size={24} />
+        <div className="relative flex items-center gap-2.5 px-4 py-4 border-b border-slate-100 bg-gradient-to-r from-brand-600 via-brand-700 to-cyan-700 overflow-hidden">
+          <div className="absolute -right-8 -top-8 w-20 h-20 bg-white/10 rounded-full blur-2xl" />
+          <div className="relative w-9 h-9 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center shadow-lg">
+            <Building2 className="text-white" size={20} />
           </div>
           <div className="relative">
-            <h1 className="font-bold text-white text-base leading-tight">MediCare</h1>
-            <p className="text-xs text-cyan-100/90">Nursing Home HMS</p>
+            <h1 className="font-bold text-white text-sm leading-tight">MediCare</h1>
+            <p className="text-[10px] text-cyan-100/90">Nursing Home HMS</p>
           </div>
         </div>
 
         {/* Nav items */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4">
+        <nav className="flex-1 overflow-y-auto px-2.5 py-3">
           {groups.map((group, groupIndex) => {
             const style = GROUP_STYLES[group] || GROUP_STYLES.System;
             return (
-              <div key={group} className="mb-5" style={{ animation: `fadeInUp 0.3s ease ${groupIndex * 0.05}s both` }}>
+              <div key={group} className="mb-3" style={{ animation: `fadeInUp 0.3s ease ${groupIndex * 0.05}s both` }}>
                 <p className={`nav-group-label ${style.color}`}>
                   {group}
                 </p>
@@ -147,11 +146,11 @@ export function Sidebar({ current, onNavigate, isOpen, onClose, role, onShowWebs
                         }}
                         className={`nav-item-premium ${isActive ? 'active' : ''}`}
                       >
-                        <span className={`nav-icon ${isActive ? '' : style.iconBg}`}>
-                          <Icon size={18} />
+                        <span className={`nav-icon ${isActive ? `bg-gradient-to-br ${style.activeGradient} text-white` : style.iconBg}`}>
+                          <Icon size={16} />
                         </span>
                         <span className="flex-1">{item.label}</span>
-                        {isActive && <ChevronRight size={14} className="text-brand-500" />}
+                        {isActive && <ChevronRight size={12} className="text-brand-500" />}
                       </button>
                     );
                   })}
@@ -161,15 +160,15 @@ export function Sidebar({ current, onNavigate, isOpen, onClose, role, onShowWebs
         </nav>
 
         {/* Footer */}
-        <div className="px-4 py-3 border-t border-slate-100 space-y-2 bg-slate-50/50">
+        <div className="px-3 py-2.5 border-t border-slate-100 space-y-1.5 bg-slate-50/50">
           {onShowWebsite && (
-            <button onClick={onShowWebsite} className="w-full flex items-center gap-2 text-xs text-slate-500 hover:text-brand-600 transition-colors py-1.5 px-2 rounded-lg hover:bg-brand-50">
-              <Globe size={14} />
+            <button onClick={onShowWebsite} className="w-full flex items-center gap-2 text-xs text-slate-500 hover:text-brand-600 transition-colors py-1 px-2 rounded-lg hover:bg-brand-50">
+              <Globe size={13} />
               View Website
             </button>
           )}
-          <div className="flex items-center gap-2 text-xs text-slate-400 px-2">
-            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+          <div className="flex items-center gap-2 text-[10px] text-slate-400 px-2">
+            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
             <span>System Online · v1.0</span>
           </div>
         </div>
