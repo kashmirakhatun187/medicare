@@ -147,7 +147,7 @@ export function Sidebar({ current, onNavigate, isOpen, onClose, role, onShowWebs
                         className={`nav-item-premium ${isActive ? 'active' : ''}`}
                       >
                         <span className={`nav-icon ${isActive ? `bg-gradient-to-br ${style.activeGradient} text-white` : style.iconBg}`}>
-                          <Icon size={16} />
+                          <Icon size={18} />
                         </span>
                         <span className="flex-1">{item.label}</span>
                         {isActive && <ChevronRight size={12} className="text-brand-500" />}
