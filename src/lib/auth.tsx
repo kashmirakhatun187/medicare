@@ -17,7 +17,7 @@ interface AuthContextType {
   user: UserProfile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string, fullName: string, role: UserRole, phone?: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, fullName: string, phone?: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -117,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: null };
   }
 
-  async function signUp(email: string, password: string, fullName: string, _role: UserRole, phone?: string) {
+  async function signUp(email: string, password: string, fullName: string, phone?: string) {
     const normalizedEmail = email.trim().toLowerCase();
     const { error } = await supabase.auth.signUp({
       email: normalizedEmail,
@@ -132,8 +132,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (error) return { error: error.message };
 
-    // A database trigger creates the patient profile. This also works when
-    // Supabase requires email confirmation and no client session exists yet.
     return { error: null };
   }
 
