@@ -104,10 +104,10 @@ export function Sidebar({ current, onNavigate, isOpen, onClose, role, onShowWebs
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-30 lg:hidden" onClick={onClose} />
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-30 lg:hidden animate-fade-in" onClick={onClose} />
       )}
       <aside
-        className={`sidebar-premium fixed lg:sticky top-0 left-0 h-screen w-64 z-40 transition-transform duration-300 flex flex-col ${
+        className={`sidebar-premium fixed lg:sticky top-0 left-0 h-screen w-72 sm:w-64 z-40 transition-transform duration-300 ease-out flex flex-col shadow-2xl lg:shadow-none ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
