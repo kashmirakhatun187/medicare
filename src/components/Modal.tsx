@@ -42,20 +42,21 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
         onClick={onClose}
       />
       <div
-        className={`relative bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full ${sizeClass} max-h-[92vh] sm:max-h-[90vh] flex flex-col transition-all duration-200 ${
+        className={`modal-panel relative bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full ${sizeClass} max-h-[92vh] sm:max-h-[90vh] flex flex-col transition-all duration-200 ${
           isOpen ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-full sm:translate-y-0 scale-95 opacity-0'
         }`}
       >
-        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-slate-100">
-          <h2 className="text-base sm:text-lg font-semibold text-slate-800">{title}</h2>
+        <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-4 border-b border-slate-100">
+          <h2 className="text-base sm:text-lg font-semibold text-slate-800 min-w-0">{title}</h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg p-1.5 transition-colors"
+            aria-label="Close dialog"
+            className="shrink-0 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg p-1.5 transition-colors"
           >
             <X size={20} />
           </button>
         </div>
-        <div className="overflow-y-auto px-4 sm:px-6 py-4 flex-1">{children}</div>
+        <div className="modal-body overflow-y-auto px-4 sm:px-6 py-4 flex-1">{children}</div>
       </div>
     </div>
   );
