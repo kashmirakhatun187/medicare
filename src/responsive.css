@@ -1,63 +1,59 @@
-@layer base {
-  html {
-    overflow-x: hidden;
-  }
-
-  body {
-    min-width: 320px;
-    overflow-x: hidden;
-  }
-
-  button,
-  input,
-  select,
-  textarea {
-    max-width: 100%;
-  }
-
-  button,
-  select,
-  input[type='button'],
-  input[type='submit'] {
-    min-height: 40px;
-  }
+html {
+  overflow-x: hidden;
 }
 
-@layer components {
-  .page-header {
-    min-width: 0;
-  }
+body {
+  min-width: 320px;
+  overflow-x: hidden;
+}
 
-  .page-header h1 {
-    overflow-wrap: anywhere;
-  }
+button,
+input,
+select,
+textarea {
+  max-width: 100%;
+}
 
-  .page-header-action {
-    width: 100%;
-  }
+button,
+select,
+input[type='button'],
+input[type='submit'] {
+  min-height: 40px;
+}
 
-  .page-header-action > * {
-    width: 100%;
-    justify-content: center;
-  }
+.page-header {
+  min-width: 0;
+}
 
-  .responsive-table {
-    min-width: 640px;
-  }
+.page-header h1 {
+  overflow-wrap: anywhere;
+}
 
-  .modal-panel {
-    width: min(100%, 56rem);
-    min-width: 0;
-  }
+.page-header-action {
+  width: 100%;
+}
 
-  .modal-body {
-    min-width: 0;
-    overscroll-behavior: contain;
-  }
+.page-header-action > * {
+  width: 100%;
+  justify-content: center;
+}
 
-  .modal-body form {
-    min-width: 0;
-  }
+.responsive-table {
+  min-width: 640px;
+}
+
+.modal-panel {
+  width: min(100%, 56rem);
+  min-width: 0;
+}
+
+.modal-body {
+  min-width: 0;
+  overscroll-behavior: contain;
+}
+
+.modal-body form {
+  min-width: 0;
 }
 
 @media (min-width: 640px) {
