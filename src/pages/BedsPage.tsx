@@ -1,18 +1,44 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/lib/auth';
 import type { Bed, Ward } from '@/lib/types';
-import { PageHeader, LoadingSpinner, StatusBadge, StatCard, Avatar } from '@/components/ui';
+import { PageHeader, LoadingSpinner, StatCard } from '@/components/ui';
 import { Modal } from '@/components/Modal';
-import { BedDouble, CheckCircle, Wrench, Activity, UserPlus, ArrowRightLeft, X } from 'lucide-react';
+import {
+  BedDouble,
+  CheckCircle,
+  Wrench,
+  Activity,
+  UserPlus,
+  ArrowRightLeft,
+  X,
+  Plus,
+} from 'lucide-react';
+
+const BED_CATEGORIES = ['General', 'Deluxe', 'ICU', 'Private', 'VIP'];
 
 export function BedsPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+
   const [beds, setBeds] = useState<Bed[]>([]);
   const [wards, setWards] = useState<Ward[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterWard, setFilterWard] = useState('All');
   const [filterStatus, setFilterStatus] = useState('All');
+  const [filterType, setFilterType] = useState('All');
   const [assignBed, setAssignBed] = useState<Bed | null>(null);
   const [patients, setPatients] = useState<any[]>([]);
+  const [showAddBed, setShowAddBed] = useState(false);
+
+  const [bedForm, setBedForm] = useState({
+    ward_id: '',
+    ward_name: '',
+    bed_number: '',
+    type: 'General',
+    status: 'Available',
+    daily_charge: '0',
+  });
 
   useEffect(() => {
     loadData();
@@ -23,8 +49,11 @@ export function BedsPage() {
     const [{ data: bedData }, { data: wardData }, { data: patientData }] = await Promise.all([
       supabase.from('beds').select('*').order('bed_number'),
       supabase.from('wards').select('*').order('name'),
-      supabase.from('patients').select('id, name, patient_id, ipd_number, opd_number, patient_type, current_ward_name, current_bed_id, status').eq('status', 'Admitted'),
+      supabase.from('patients')
+        .select('id, name, patient_id, ipd_number, opd_number, patient_type, current_ward_name, current_bed_id, status')
+        .eq('status', 'Admitted'),
     ]);
+
     setBeds(bedData || []);
     setWards(wardData || []);
     setPatients(patientData || []);
@@ -34,18 +63,67 @@ export function BedsPage() {
   const filtered = beds.filter((b) => {
     const matchesWard = filterWard === 'All' || b.ward_name === filterWard;
     const matchesStatus = filterStatus === 'All' || b.status === filterStatus;
-    return matchesWard && matchesStatus;
+    const matchesType = filterType === 'All' || b.type === filterType;
+    return matchesWard && matchesStatus && matchesType;
   });
 
   const occupied = beds.filter((b) => b.status === 'Occupied').length;
   const available = beds.filter((b) => b.status === 'Available').length;
   const maintenance = beds.filter((b) => b.status === 'Maintenance').length;
 
+  async function handleCreateBed() {
+    if (!bedForm.ward_id || !bedForm.bed_number.trim()) {
+      alert('Please select a ward and enter bed number.');
+      return;
+    }
+
+    const selectedWard = wards.find((w) => w.id === bedForm.ward_id);
+    const normalizedBedNumber = bedForm.bed_number.trim();
+    const duplicate = beds.some(
+      (b) =>
+        b.ward_id === selectedWard?.id &&
+        b.bed_number.trim().toLowerCase() === normalizedBedNumber.toLowerCase(),
+    );
+
+    if (duplicate) {
+      alert(`Bed number ${normalizedBedNumber} already exists in ${selectedWard?.name || 'this ward'}. Please use a unique number.`);
+      return;
+    }
+
+    const payload = {
+      bed_number: normalizedBedNumber,
+      ward_id: selectedWard?.id ?? null,
+      ward_name: selectedWard?.name ?? bedForm.ward_name,
+      type: bedForm.type,
+      status: 'Available',
+      patient_id: null,
+      patient_name: null,
+      daily_charge: Number(bedForm.daily_charge || selectedWard?.charge_per_day || 0),
+    };
+
+    const { error } = await supabase.from('beds').insert(payload);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    setShowAddBed(false);
+    setBedForm({
+      ward_id: '',
+      ward_name: '',
+      bed_number: '',
+      type: 'General',
+      status: 'Available',
+      daily_charge: '0',
+    });
+    await loadData();
+  }
+
   async function assignPatientToBed(bed: Bed, patientId: string) {
     const patient = patients.find((p) => p.id === patientId);
     if (!patient) return;
 
-    // Double-assignment protection: check if patient already has a bed
     if (patient.current_bed_id) {
       const existingBed = beds.find((b) => b.id === patient.current_bed_id);
       if (existingBed && existingBed.id !== bed.id) {
@@ -54,13 +132,11 @@ export function BedsPage() {
       }
     }
 
-    // Check if bed is actually available
     if (bed.status === 'Occupied' && bed.patient_id !== patientId) {
       alert(`Bed ${bed.bed_number} is already occupied by ${bed.patient_name}.`);
       return;
     }
 
-    // Assign patient to bed
     await supabase.from('beds').update({
       status: 'Occupied',
       patient_id: patient.id,
@@ -73,39 +149,37 @@ export function BedsPage() {
     }).eq('id', patient.id);
 
     setAssignBed(null);
-    loadData();
+    await loadData();
   }
 
   async function transferPatient(bed: Bed, newBedId: string) {
     const newBed = beds.find((b) => b.id === newBedId);
     if (!newBed) return;
+
     if (newBed.status === 'Occupied') {
       alert(`Bed ${newBed.bed_number} is already occupied by ${newBed.patient_name}.`);
       return;
     }
 
-    // Free old bed
     await supabase.from('beds').update({
       status: 'Available',
       patient_id: null,
       patient_name: null,
     }).eq('id', bed.id);
 
-    // Occupy new bed
     await supabase.from('beds').update({
       status: 'Occupied',
       patient_id: bed.patient_id,
       patient_name: bed.patient_name,
     }).eq('id', newBedId);
 
-    // Update patient's bed reference
     await supabase.from('patients').update({
       current_bed_id: newBedId,
       current_ward_name: newBed.ward_name,
     }).eq('id', bed.patient_id);
 
     setAssignBed(null);
-    loadData();
+    await loadData();
   }
 
   async function dischargePatientFromBed(bed: Bed) {
@@ -123,7 +197,7 @@ export function BedsPage() {
       status: 'Discharged',
     }).eq('id', bed.patient_id);
 
-    loadData();
+    await loadData();
   }
 
   if (loading) return <LoadingSpinner />;
@@ -136,7 +210,18 @@ export function BedsPage() {
 
   return (
     <div className="animate-fade-in">
-      <PageHeader title="Bed & Ward Management" subtitle="Visual bed map with patient assignment and transfer" />
+      <PageHeader
+        title="Bed & Ward Management"
+        subtitle="Visual bed map with patient assignment and transfer"
+        action={
+          isAdmin ? (
+            <button className="btn-primary" onClick={() => setShowAddBed(true)}>
+              <Plus size={16} className="inline mr-1" />
+              Add Bed
+            </button>
+          ) : null
+        }
+      />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard label="Total Beds" value={beds.length} icon={<BedDouble size={22} />} color="brand" />
@@ -152,15 +237,22 @@ export function BedsPage() {
             <option key={w.id}>{w.name}</option>
           ))}
         </select>
+
         <select className="input sm:w-48" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
           <option>All</option>
           <option>Available</option>
           <option>Occupied</option>
           <option>Maintenance</option>
         </select>
+
+        <select className="input sm:w-48" value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+          <option>All</option>
+          {BED_CATEGORIES.map((type) => (
+            <option key={type} value={type}>{type}</option>
+          ))}
+        </select>
       </div>
 
-      {/* Ward Summary */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {wards.map((w) => {
           const wardBeds = beds.filter((b) => b.ward_name === w.name);
@@ -187,7 +279,6 @@ export function BedsPage() {
         })}
       </div>
 
-      {/* Bed Grid */}
       <div className="card p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-slate-800">Bed Map</h3>
@@ -232,6 +323,63 @@ export function BedsPage() {
           onTransfer={transferPatient}
           onDischarge={dischargePatientFromBed}
         />
+      )}
+
+      {showAddBed && (
+        <Modal isOpen={true} onClose={() => setShowAddBed(false)} title="Add New Bed" size="md">
+          <div className="space-y-4">
+            <label className="label">Ward</label>
+            <select
+              className="input"
+              value={bedForm.ward_id}
+              onChange={(e) => {
+                const selectedWard = wards.find((w) => w.id === e.target.value);
+                setBedForm({
+                  ...bedForm,
+                  ward_id: e.target.value,
+                  ward_name: selectedWard?.name || '',
+                });
+              }}
+            >
+              <option value="">Select ward</option>
+              {wards.map((w) => (
+                <option key={w.id} value={w.id}>{w.name}</option>
+              ))}
+            </select>
+
+            <label className="label">Bed Category</label>
+            <select
+              className="input"
+              value={bedForm.type}
+              onChange={(e) => setBedForm({ ...bedForm, type: e.target.value })}
+            >
+              {BED_CATEGORIES.map((type) => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+
+            <label className="label">Bed Number</label>
+            <input
+              className="input"
+              value={bedForm.bed_number}
+              onChange={(e) => setBedForm({ ...bedForm, bed_number: e.target.value })}
+              placeholder="e.g. A-101"
+            />
+
+            <label className="label">Daily Charge</label>
+            <input
+              className="input"
+              type="number"
+              value={bedForm.daily_charge}
+              onChange={(e) => setBedForm({ ...bedForm, daily_charge: e.target.value })}
+            />
+
+            <button className="btn-primary w-full mt-3" onClick={handleCreateBed}>
+              <Plus size={16} className="inline mr-1" />
+              Save Bed
+            </button>
+          </div>
+        </Modal>
       )}
     </div>
   );
